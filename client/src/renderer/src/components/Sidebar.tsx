@@ -5,16 +5,14 @@
 import {useRef,useEffect,useContext} from 'react'
 import { UserContext } from './ContextStore';
 import { useNavigate } from 'react-router-dom';
-import LocalShippingIcon from '@mui/icons-material/LocalShipping';
-import ListAltIcon from '@mui/icons-material/ListAlt';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-import EngineeringIcon from '@mui/icons-material/Engineering';
-import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
-import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
-import SettingsIcon from '@mui/icons-material/Settings';
-import LogoutIcon from '@mui/icons-material/Logout';
+import { Sidebar } from "flowbite-react";
+import { FaWeightScale, FaDownLeftAndUpRightToCenter, FaUpRightAndDownLeftFromCenter } from "react-icons/fa6";
+import { MdOutlineSettings, MdOutlineLogout } from "react-icons/md";
 
-const Sidebar = () => {
+
+
+const CustomSidebar = () => {
 
     const sidebarRef = useRef<HTMLDivElement>(null);
     const nav = useNavigate();
@@ -66,74 +64,88 @@ const Sidebar = () => {
         </button>
 
         <aside id="default-sidebar" className="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
-            <div className="h-full px-3 py-4 overflow-y-auto bg-gray-50 dark:bg-gray-800">
+            <Sidebar aria-label="Sidebar with multi-level dropdown example">
 
-            <a className="flex items-center ps-2.5 mb-5">
-                <span className="self-center text-xl font-semibold whitespace-nowrap dark:text-white">Weight Management</span>
-            </a>
+                <a className="flex items-center ps-2.5 mb-5 select-none">
+                    <span className="self-center text-xl font-semibold whitespace-nowrap dark:text-white">Weight Management</span>
+                </a>
+                <br/>
+                    <Sidebar.Items>
+                        <Sidebar.ItemGroup>
+                        {
+                            user?.role === 'admin' &&
+                            <Sidebar.Item href="#" icon={DashboardIcon}>
+                                <a  className="flex text-lg items-center text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700" onClick={()=>nav('/dashboard')}>
+                                    {/* <DashboardIcon/> */}
+                                    <span className="ms-3">Dashboard</span>
+                                </a>
+                            </Sidebar.Item>
+                        }
 
-                <ul className="space-y-2 font-medium">
-                    <li>
-                        <a  className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" onClick={()=>nav('/dashboard')}>
-                        <DashboardIcon/>
-                        <span className="ms-3">Dashboard</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a  className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" onClick={()=>nav('/addforms')}>
-                        <LocalShippingIcon/>
-                        <span className="flex-1 ms-3 whitespace-nowrap">Add Truck</span>
-                        </a>
-                    </li>
+                        <Sidebar.Collapse icon={FaWeightScale} label="Weighing" className='text-lg gap-6'>
+                            <Sidebar.Item href="#">
+                                <a  className="flex text-lg items-center text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700" onClick={()=>nav('/listtransactions')}> 
+                                    <span className="ms-3">List Record</span>
+                                </a>
+                            </Sidebar.Item>
 
-                    <li>
-                        <a  className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" onClick={()=>nav('/allcontainers')}>
-                        <ListAltIcon/>
-                        <span className="flex-1 ms-3 whitespace-nowrap">List Trucks</span>
-                        </a>
-                    </li>
+                            <Sidebar.Item href="#">
+                                <a  className="flex text-lg items-center text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700" onClick={()=>nav(`/addforms/addweightintransaction`)}> 
+                                    <span className="ms-3">Add IN Record</span>
+                                </a>
+                            </Sidebar.Item>
 
-                    {user?.role === "admin" &&
-                        <>
-                        <li>
-                            <a  className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" onClick={()=>nav('/allemployees')}>
-                            <EngineeringIcon/>
-                            <span className="flex-1 ms-3 whitespace-nowrap">List Employees</span>
+                            <Sidebar.Item href="#">
+                                <a  className="flex text-lg items-center text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700" onClick={()=>nav('/addforms/addweightouttransaction')}>
+                                    <span className="ms-3">Add OUT Record</span>
+                                </a>
+                            </Sidebar.Item>
+                        </Sidebar.Collapse>
+
+                        <Sidebar.Collapse icon={FaDownLeftAndUpRightToCenter} label="Internal" className='text-lg gap-6'>
+                            <Sidebar.Item href="#">
+                                <a  className="flex text-lg items-center text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700" onClick={()=>nav('/listintrecords')}> 
+                                    <span className="ms-3">List Record</span>
+                                </a>
+                            </Sidebar.Item>
+
+                            <Sidebar.Item href="#">
+                                <a  className="flex text-lg items-center text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700" onClick={()=>nav('/addforms/addintrecord')}>
+                                    <span className="ms-3">Add Record</span>
+                                </a>
+                            </Sidebar.Item>
+                        </Sidebar.Collapse>
+                        
+                        <Sidebar.Collapse icon={FaUpRightAndDownLeftFromCenter} label="External" className='text-lg gap-6'>
+                            <Sidebar.Item href="#">
+                                <a  className="flex text-lg items-center text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700" onClick={()=>nav('/listextrecords')}> 
+                                    <span className="ms-3">List Record</span>
+                                </a>
+                            </Sidebar.Item>
+
+                            <Sidebar.Item href="#">
+                                <a  className="flex text-lg items-center text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700" onClick={()=>nav('/addforms/addextrecord')}> 
+                                    <span className="ms-3">Add Record</span>
+                                </a>
+                            </Sidebar.Item>
+                        </Sidebar.Collapse>
+
+                        <Sidebar.Item href="#" icon={MdOutlineSettings}>
+                            <a  className="flex text-lg items-center text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" onClick={()=>nav(`/settings`)}>
+                                <span className="ms-3">Settings</span>
                             </a>
-                        </li>
-                        </>
+                        </Sidebar.Item>
 
-                    }
+                        <Sidebar.Item href="#" icon={MdOutlineLogout} className='absolute bottom-4 w-full'>
+                            <a  className="flex text-lg items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" onClick={Logout}>
+                                <span className="flex-1 ms-3 whitespace-nowrap">Logout</span>
+                            </a>
+                        </Sidebar.Item>
 
-                    <li>
-                        <a  className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" onClick={()=>nav('/notifications')}>
-                        <NotificationsNoneIcon/>
-                        <span className="flex-1 ms-3 whitespace-nowrap">Change Logs</span>
-                        {/* <span className="inline-flex items-center justify-center w-3 h-3 p-3 ms-3 text-sm font-medium text-blue-800 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-300">3</span> */}
-                        </a>
-                    </li>
-                    <li>
-                        <a  className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" onClick={()=>nav(`/profile`)}>
-                        <PersonOutlineIcon/>
-                        <span className="flex-1 ms-3 whitespace-nowrap">Profile</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a  className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" onClick={()=>nav(`/settings`)}>
-                        <SettingsIcon/>
-                        <span className="flex-1 ms-3 whitespace-nowrap">Settings</span>
-                        </a>
-                    </li>
-
-                    <li className="absolute bottom-4 left-0 w-full">
-                        <a  className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group" onClick={Logout}>
-                        <LogoutIcon/>
-                        <span className="flex-1 ms-3 whitespace-nowrap">Logout</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            </aside>
+                        </Sidebar.ItemGroup>
+                    </Sidebar.Items>
+            </Sidebar>
+        </aside>
     </aside>
 
 
@@ -141,4 +153,4 @@ const Sidebar = () => {
   )
 }
 
-export default Sidebar
+export default CustomSidebar

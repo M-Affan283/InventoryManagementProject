@@ -1,6 +1,7 @@
 import { useState, useEffect,useContext } from 'react'
 import axios from 'axios';
 import { UserContext } from '../ContextStore';
+import { useNavigate } from 'react-router-dom';
 
 const CreateUser = () => {
 
@@ -9,7 +10,9 @@ const CreateUser = () => {
     const [dropDownValue, setDropDownValue] = useState<string>("Role");
     const [serverResponse, setServerResponse] = useState<{message:string, status:number} | null>(null);
 
-    const {apiUrl} = useContext(UserContext);
+    const {user,apiUrl} = useContext(UserContext);
+
+    const nav = useNavigate();
 
     const [firstName, setFirstName] = useState<string>("");
     const [lastName, setLastName] = useState<string>("");
@@ -54,7 +57,7 @@ const CreateUser = () => {
 
         try
         {
-            axios.post(`${apiUrl}/user/createUser`, {firstName: firstName, lastName: lastName, email: email, password: password, role: dropDownValue})
+            axios.post(`${apiUrl}/user/createUser`, {firstName: firstName, lastName: lastName, email: email, password: password, role: dropDownValue, creator_email: user?.email})
             .then((res)=>
             {
                 if(res.status === 200)
@@ -93,14 +96,17 @@ const CreateUser = () => {
     
             {/* CARD */}
             <div className="max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-                <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Create User</h5>
-                <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">Create a new user.</p>
-                <button onClick={openForm} className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                    Open Form
-                    <svg className="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
-                    </svg>
-                </button>
+                <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">User</h5>
+                <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">Create a new user or list existing users.</p>
+                {/* two buttons in a row on to create one to list */}
+                <div className="flex justify-between gap-4">
+                    <button onClick={openForm} className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                        Create User
+                    </button>
+                    <button onClick={()=>nav('/allemployees')} className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                        List Users
+                    </button>
+                </div>
     
                 <br/>
     

@@ -4,105 +4,113 @@ import { useNavigate } from 'react-router-dom'
 import { useTable } from 'react-table'
 import axios from 'axios'
 import CustomSidebar from './Sidebar'
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
-const AllEmployees = () => {
+const ListExternalTransactions = () => {
 
-  const [employees, setEmployees] = useState([]);
-  const [searchQuery, setSearchQuery] = useState<string>(""); //search query for filtering employees
-  const [serverResponse, setServerResponse] = useState<string>(""); //server response for fetching employees
-  const nav = useNavigate();
-  const {user, isLogged,apiUrl} = useContext(UserContext);
+    const [transactions, setTransactions] = useState([]);
+    const [searchQuery, setSearchQuery] = useState<string>(""); //search query for filtering containers
+    const [serverResponse, setServerResponse] = useState<string>(""); //server response for fetching containers
+    const nav = useNavigate();
+    const {user, isLogged, apiUrl} = useContext(UserContext);
 
 
-  //pagination states
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(15);
+    //pagination states
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(15);
+    
+
+    useEffect(()=>
+    {
+
+        if(!isLogged)
+        {
+        nav('/');
+        }
+
+    },[])
+
+
+    const fetchData = async (searchQuery) =>
+    {
+        try
+        {
+            axios.get(`${apiUrl}/goods/getExternalTransactions`, {params: {email: user?.email ,searchQuery: searchQuery, page: page, pageSize: pageSize}})
+            .then((res)=>
+            {
+                console.log("Transactions fetched successfully");
+                setTransactions(res.data.transactions);
+
+            })
+            .catch((err)=>
+            {
+                console.log("Failed to fetch transactions: ", err.response.data.message);
+                setServerResponse("Error fetching transactions");
+            })
+
+        }
+        catch(error)
+        {
+            console.log(error);
+            setServerResponse("Error fetching transactions");
+        }
+    }
+
+    useEffect(() => {
+        fetchData(searchQuery);
+    }, [page]);
   
-
-  useEffect(()=>
-  {
-
-    if(!isLogged || user?.role !== "admin")
-    {
-      nav('/');
+    // change back to page 1 if search query changes
+    useEffect(() => {
+        setPage(1);
+        fetchData(searchQuery);
+    }, [searchQuery]);
+  
+    // Pagination handlers
+    const nextPage = () => {
+        setPage(page + 1);
+    }
+  
+    const prevPage = () => {
+        setPage(page - 1);
     }
 
-  },[])
+    const transaction_columns = [
+        {
+          Header: "Company Name",
+          accessor: "company_name",
+        },
+        {
+            Header: "Truck No.",
+            accessor: "truck_no"
+        },
+        {
+            Header: "Driver Name",
+            accessor: "driver_name"
+        },
+        {
+            Header: "Vehicle Weight",
+            accessor: "vehicle_weight"
+        },
+        {
+          Header: "External Amount",
+          accessor: "external_amount"
+        },
+        {
+          // Header: "Update",
+          accessor: "update",
+          Cell: ({row}) => (
+            <p className="">
+                <button type="submit" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" onClick={()=>nav(`/individualexttransaction/${row.original._id}`)}>View</button>
+            </p>
+          )
+        }
+      ]
 
-  const fetchData = async (searchQuery) =>
-  {
-    try
-    {
-      axios.get(`${apiUrl}/user/getAllUsers`, {params: {searchQuery: searchQuery, page: page, pageSize: pageSize}})
-      .then((res)=>
-      {
-        console.log("Employees fetched successfully");
-        setEmployees(res.data.employees);
-        console.log(res.data.employees);
+      const transaction_columns_memo = useMemo(() => transaction_columns, []);
+      const transactions_memo = useMemo(() => (transactions || []), [transactions]);
 
-      })
-      .catch((err)=>
-      {
-        console.log("Failed to fetch employees: ", err.response.data.message);
-        setServerResponse("Error fetching employees");
-      })
-
-    }
-    catch(error)
-    {
-      console.log(error)
-      setServerResponse("Error fetching employees");
-
-    }
-  }
-
-  useEffect(() => {
-      fetchData(searchQuery);
-  }, [page]);
-
-  // change back to page 1 if search query changes
-  useEffect(() => {
-      setPage(1);
-      fetchData(searchQuery);
-  }, [searchQuery]);
-
-  // Pagination handlers
-  const nextPage = () => {
-      setPage(page + 1);
-  }
-
-  const prevPage = () => {
-      setPage(page - 1);
-  }
-
-  const employee_columns = [
-    {
-      Header: "First Name",
-      accessor: "firstName"
-    },
-    {
-      Header: "Last Name",
-      accessor: "lastName"
-    },
-    {
-      Header: "Email",
-      accessor: "email"
-    },
-    {
-      Header: "Role",
-      accessor: "role"
-    }
-    //may add button to view profile
-  ]
-
-  const employee_columns_memo = useMemo(() => employee_columns, []);
-  const employee_memo = useMemo(() => (employees || []), [employees]);
-
-  const employee_table = useTable({columns: employee_columns_memo, data: employee_memo});
-
-  const {getTableProps, getTableBodyProps, headerGroups, rows, prepareRow} = employee_table;
-
+      const transactions_table = useTable({columns: transaction_columns_memo, data: transactions_memo});
+      const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = transactions_table;
 
   return (
     <div className='flex flex-row w-full overflow-hidden dark:bg-gray-800 dark:text-white'>
@@ -111,21 +119,13 @@ const AllEmployees = () => {
         <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 min-h-screen w-full overflow-y-auto">
           
           <p className="text-2xl text-gray-400 dark:text-white">
-            Employees
+            External Transactions
           </p>
 
           <p className="text-gray-400 dark:text-white">
-            These are all the employees in the system database (including you).
+            {user?.role === "admin" ? "These are all the external transactions in system database." : "These are all the external transactions you have added."}
           </p>
 
-          <br/>
-
-          <button type="button" className="text-white inline-flex items-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 gap-3" onClick={()=>nav('/settings')}>
-            <ArrowBackIcon/>
-            Back
-          </button>
-
-          <br/>
           {
             serverResponse &&
             <div className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-red-900 dark:text-red-400 w-full" role="alert">
@@ -143,19 +143,17 @@ const AllEmployees = () => {
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
                     </svg>
                 </div>
-                <input type="search" id="default-search" className="block w-full p-4 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Search for employees..." value={searchQuery} onChange={(e)=>setSearchQuery(e.target.value)} />
+                <input type="search" id="default-search" className="block w-full p-4 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Search for trucks..." value={searchQuery} onChange={(e)=>setSearchQuery(e.target.value)} />
             </div>
           </form>
           <br/>
-          {employees && employees.length > 0 ?
+          {transactions && transactions.length > 0 ?
             <>
 
               {/* Search bar */}
-
-
               <br/>
               <br/>
-
+            
               <table {...getTableProps()} className="w-full text-base text-left rtl:text-right text-gray-500 dark:text-white">
                 <thead className="text-base text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
 
@@ -201,7 +199,7 @@ const AllEmployees = () => {
                 </svg>
                 Previous
               </button>
-              <button className="flex items-center justify-center px-4 h-10 text-base font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white" onClick={nextPage} disabled={employees.length < pageSize}>
+              <button className="flex items-center justify-center px-4 h-10 text-base font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white" onClick={nextPage} disabled={transactions.length < pageSize}>
                 Next
                 <svg className="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
                   <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
@@ -217,7 +215,7 @@ const AllEmployees = () => {
             </svg>
             <span className="sr-only">Info</span>
             <div>
-              <span className="font-medium">No employees found</span>
+              <span className="font-medium">No containers found</span>
             </div>
           </div>
 
@@ -231,4 +229,4 @@ const AllEmployees = () => {
   )
 }
 
-export default AllEmployees
+export default ListExternalTransactions

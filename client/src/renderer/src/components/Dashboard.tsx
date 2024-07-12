@@ -15,7 +15,7 @@ import {useEffect, useState, useContext} from 'react'
 import { UserContext } from './ContextStore';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import Sidebar from './Sidebar';
+import CustomSidebar from './Sidebar';
 import CircularProgress from '@mui/material/CircularProgress';
 import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
@@ -27,6 +27,211 @@ import {
   mangoFusionPalette,
   cheerfulFiestaPalette,
 } from '@mui/x-charts/colorPalettes';
+import { ContentCutOutlined } from '@mui/icons-material';
+
+/* UPDATE DATA IS NOW IN THE FORM:
+
+  {
+  "data": {
+    "weight_transaction_widget_data": {
+      "today": {
+        "incoming": 0,
+        "outgoing": 0,
+        "goods_weight": {
+          "incoming": [],
+          "outgoing": []
+        }
+      },
+      "this_week": {
+        "incoming": 4,
+        "outgoing": 2,
+        "goods_weight": {
+          "incoming": [
+            {
+              "value": 200,
+              "label": "Aluminium"
+            },
+            {
+              "value": 100,
+              "label": "Steel"
+            }
+          ],
+          "outgoing": [
+            {
+              "value": 500,
+              "label": "Aluminium"
+            },
+            {
+              "value": 1086,
+              "label": "Steel"
+            }
+          ]
+        }
+      },
+      "this_month": {
+        "incoming": 4,
+        "outgoing": 2,
+        "goods_weight": {
+          "incoming": [
+            {
+              "value": 200,
+              "label": "Aluminium"
+            },
+            {
+              "value": 100,
+              "label": "Steel"
+            }
+          ],
+          "outgoing": [
+            {
+              "value": 500,
+              "label": "Aluminium"
+            },
+            {
+              "value": 1086,
+              "label": "Steel"
+            }
+          ]
+        }
+      }
+    },
+    "internal_transaction_widget_data": {
+      "today": {
+        "goods_weight": [],
+        "work_amount": []
+      },
+      "this_week": {
+        "goods_weight": [
+          {
+            "value": 300,
+            "label": "Aluminium"
+          },
+          {
+            "value": 700,
+            "label": "Steel"
+          }
+        ],
+        "work_amount": [
+          {
+            "value": 15000,
+            "label": "Aluminium"
+          },
+          {
+            "value": 70000,
+            "label": "Steel"
+          }
+        ]
+      },
+      "this_month": {
+        "goods_weight": [
+          {
+            "value": 300,
+            "label": "Aluminium"
+          },
+          {
+            "value": 700,
+            "label": "Steel"
+          }
+        ],
+        "work_amount": [
+          {
+            "value": 15000,
+            "label": "Aluminium"
+          },
+          {
+            "value": 70000,
+            "label": "Steel"
+          }
+        ]
+      }
+    },
+    "external_transaction_widget_data": {
+      "today": {
+        "vehicle_weight": [],
+        "external_amount": []
+      },
+      "this_week": {
+        "vehicle_weight": [
+          {
+            "value": 5000,
+            "label": "WorldCall"
+          },
+          {
+            "value": 8000,
+            "label": "FAST"
+          },
+          {
+            "value": 5000,
+            "label": "Google"
+          },
+          {
+            "value": 2500,
+            "label": "Facebook"
+          }
+        ],
+        "external_amount": [
+          {
+            "value": 1650000,
+            "label": "WorldCall"
+          },
+          {
+            "value": 2000000,
+            "label": "FAST"
+          },
+          {
+            "value": 1000000,
+            "label": "Google"
+          },
+          {
+            "value": 375000,
+            "label": "Facebook"
+          }
+        ]
+      },
+      "this_month": {
+        "vehicle_weight": [
+          {
+            "value": 5000,
+            "label": "WorldCall"
+          },
+          {
+            "value": 8000,
+            "label": "FAST"
+          },
+          {
+            "value": 5000,
+            "label": "Google"
+          },
+          {
+            "value": 2500,
+            "label": "Facebook"
+          }
+        ],
+        "external_amount": [
+          {
+            "value": 1650000,
+            "label": "WorldCall"
+          },
+          {
+            "value": 2000000,
+            "label": "FAST"
+          },
+          {
+            "value": 1000000,
+            "label": "Google"
+          },
+          {
+            "value": 375000,
+            "label": "Facebook"
+          }
+        ]
+      }
+    }
+  }
+}
+
+
+*/
 
 
 const Dashboard = () => {
@@ -36,12 +241,34 @@ const Dashboard = () => {
     
     const [widgetData, setWidgetData] = useState<any>(null);
 
+    const [weightTransactionWidgetData, setWeightTransactionWidgetData] = useState<any>(null);
+    const [internalTransactionWidgetData, setInternalTransactionWidgetData] = useState<any>(null);
+    const [externalTransactionWidgetData, setExternalTransactionWidgetData] = useState<any>(null);
+
+    //for weigth transaction widget data
     const [todayIncoming, setTodayIncoming] = useState<any[]>([]);
     const [todayOutgoing, setTodayOutgoing] = useState<any[]>([]);
     const [thisWeekIncoming, setThisWeekIncoming] = useState<any[]>([]);
     const [thisWeekOutgoing, setThisWeekOutgoing] = useState<any[]>([]);
     const [thisMonthIncoming, setThisMonthIncoming] = useState<any[]>([]);
     const [thisMonthOutgoing, setThisMonthOutgoing] = useState<any[]>([]);
+
+    //for internal transaction widget data
+
+    const [internalTodayGoodsWeight, setInternalTodayGoodsWeight] = useState<any[]>([]);
+    const [internalThisWeekGoodsWeight, setInternalThisWeekGoodsWeight] = useState<any[]>([]);
+    const [internalThisMonthGoodsWeight, setInternalThisMonthGoodsWeight] = useState<any[]>([]);
+    const [internalTodayWorkAmount, setInternalTodayWorkAmount] = useState<any[]>([]);
+    const [internalThisWeekWorkAmount, setInternalThisWeekWorkAmount] = useState<any[]>([]);
+    const [internalThisMonthWorkAmount, setInternalThisMonthWorkAmount] = useState<any[]>([]);
+
+    //for external transaction widget data
+    const [externalTodayVehicleWeight, setExternalTodayVehicleWeight] = useState<any[]>([]);
+    const [externalThisWeekVehicleWeight, setExternalThisWeekVehicleWeight] = useState<any[]>([]);
+    const [externalThisMonthVehicleWeight, setExternalThisMonthVehicleWeight] = useState<any[]>([]);
+    const [externalTodayExternalAmount, setExternalTodayExternalAmount] = useState<any[]>([]);
+    const [externalThisWeekExternalAmount, setExternalThisWeekExternalAmount] = useState<any[]>([]);
+    const [externalThisMonthExternalAmount, setExternalThisMonthExternalAmount] = useState<any[]>([]);
 
 
     useEffect(()=>
@@ -51,10 +278,20 @@ const Dashboard = () => {
           nav('/');
         }
 
+        if(user?.role === 'employee')
+        {
+          nav('/profile')
+        }
+
         axios.get(`${apiUrl}/goods/widgetData`, {params: {email: user?.email}})
         .then((res)=>
         {
-            setWidgetData(res.data);
+            setWidgetData(res.data.data);
+
+            setWeightTransactionWidgetData(res.data.data.weight_transaction_widget_data);
+            setInternalTransactionWidgetData(res.data.data.internal_transaction_widget_data);
+            setExternalTransactionWidgetData(res.data.data.external_transaction_widget_data);
+
         })
         .catch((err)=>
         {
@@ -66,7 +303,7 @@ const Dashboard = () => {
 
 
     //must first convert data inn widgetData to series data for pie chart
-    const convertToPieData = (data: any) =>
+    const convertWeightTransactionToPieData = (data: any) =>
     {
       //take the widgetData and convert it to the format required for the pie chart
       //total 6 pie charts. 3 for incoming and 3 for outgoing. Today, this week and this month
@@ -79,21 +316,59 @@ const Dashboard = () => {
       setThisMonthOutgoing(data.this_month.goods_weight.outgoing);
     }
 
+    const convertInternalTransactionToPieData = (data: any) =>
+    {
+      // console.log("Data: ", data)
+      setInternalTodayGoodsWeight(data.today.goods_weight);
+      setInternalThisWeekGoodsWeight(data.this_week.goods_weight);
+      setInternalThisMonthGoodsWeight(data.this_month.goods_weight);
+      setInternalTodayWorkAmount(data.today.work_amount);
+      setInternalThisWeekWorkAmount(data.this_week.work_amount);
+      setInternalThisMonthWorkAmount(data.this_month.work_amount);
+    
+    }
+
+    const convertExternalTransactionToPieData = (data: any) =>
+    {
+      // console.log("Data: ", data)
+      setExternalTodayVehicleWeight(data.today.vehicle_weight);
+      setExternalThisWeekVehicleWeight(data.this_week.vehicle_weight);
+      setExternalThisMonthVehicleWeight(data.this_month.vehicle_weight);
+      setExternalTodayExternalAmount(data.today.external_amount);
+      setExternalThisWeekExternalAmount(data.this_week.external_amount);
+      setExternalThisMonthExternalAmount(data.this_month.external_amount);
+    }
+
     useEffect(()=>
     {
-      if(widgetData)
+      if(weightTransactionWidgetData)
       {
-        // console.log(widgetData);
-        convertToPieData(widgetData.data);
+        convertWeightTransactionToPieData(weightTransactionWidgetData);
       }
     
-    },[widgetData])
+    },[weightTransactionWidgetData])
 
+    useEffect(()=>
+    {
+      if(internalTransactionWidgetData)
+      {
+        convertInternalTransactionToPieData(internalTransactionWidgetData);
+      }
+    },[internalTransactionWidgetData])
+
+    useEffect(()=>
+    {
+      if(externalTransactionWidgetData)
+      {
+        convertExternalTransactionToPieData(externalTransactionWidgetData);
+      }
+    
+    },[externalTransactionWidgetData])
 
 
   return (
     <div className='flex flex-row w-full overflow-hidden dark:bg-gray-800 dark:text-white'>
-      <Sidebar />
+      <CustomSidebar/>
       <div className="p-4 sm:ml-64 bg-gray-100 dark:bg-gray-900 font-mono flex-grow">
         <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 min-h-screen w-full overflow-y-auto">
           
@@ -109,23 +384,22 @@ const Dashboard = () => {
 
           <br/>
           {
-            widgetData ? 
+            weightTransactionWidgetData ? 
             <div>
               
-            
-              {/* DISPLAY MAIN STUFF IN CARD FORM */}
               <br/>
 
-              {/* First todays data. Which includes the cards for number of today incomming goods, outgoing goods, total goodsd weight */}
-              {/* then a pie chart for today_goods_weight using material ui pie chart*/}
-              {/* make use of sample code for pie chart */}
+              {/* title */}
+
+              <h3 className="text-2xl font-bold underline dark:text-white">Summary of weight transaction data:</h3>
+
+              <br/>
 
               <h4 className="text-2xl font-bold underline dark:text-white">Todays's Data:</h4>
 
               <br/>
               <Grid sx={{ flexGrow: 1 }} container spacing={5}>
                   <Grid item xs={12}>
-                    {/* make width of each grid item larger */}
                     <Grid container justifyContent="center" spacing={5}>
                       <Grid item>
                         {/* rounded corners background color dark, white text width 150 height 140 text centre */}
@@ -136,7 +410,7 @@ const Dashboard = () => {
                               </Typography>
                               <br/> 
                               <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                                {widgetData.data.today.incoming}
+                                {weightTransactionWidgetData.today.incoming}
                               </Typography>
                             </CardContent>
                           </Card>
@@ -149,7 +423,7 @@ const Dashboard = () => {
                             </Typography>
                             <br/>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                              {widgetData.data.today.outgoing}
+                              {weightTransactionWidgetData.today.outgoing}
                             </Typography>
                           </CardContent>
                         </Card>
@@ -192,7 +466,6 @@ const Dashboard = () => {
                 <div className="flex justify-center items-center">
                   <Grid container spacing={2}>
                     <Grid item xs={6}>
-                      {/* provide a title */}
                       <p className="text-2xl font-bold dark:text-white">Incoming Weight by Goods Type:</p>
                       <br/>
                       <PieChart
@@ -211,7 +484,7 @@ const Dashboard = () => {
                               fontSize: 15,
                               fill: 'white'
                              },
-                          }
+                          },
                         }}
                         sx={{
                           [`& .${pieArcLabelClasses.root}`]: {
@@ -223,7 +496,6 @@ const Dashboard = () => {
                       />
                     </Grid>
                     <Grid item xs={6}>
-                      {/* provide a title */}
                       <p className="text-2xl font-bold dark:text-white">Outgoing Weight by Goods Type:</p>
                       <br/>
                       <PieChart
@@ -279,7 +551,7 @@ const Dashboard = () => {
                             </Typography>
                             <br/>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                              {widgetData.data.this_week.incoming}
+                              {weightTransactionWidgetData.this_week.incoming}
                             </Typography>
                           </CardContent>
                         </Card>
@@ -292,7 +564,7 @@ const Dashboard = () => {
                             </Typography>
                             <br/>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                              {widgetData.data.this_week.outgoing}
+                              {weightTransactionWidgetData.this_week.outgoing}
                             </Typography>
                           </CardContent>
                         </Card>
@@ -336,7 +608,6 @@ const Dashboard = () => {
                 <div className="flex justify-center items-center">
                   <Grid container spacing={2}>
                     <Grid item xs={6}>
-                      {/* provide a title */}
                       <p className="text-2xl font-bold dark:text-white">Incoming Weight by Goods Type:</p>
                       <br/>
                       <PieChart
@@ -367,7 +638,6 @@ const Dashboard = () => {
                       />
                     </Grid>
                     <Grid item xs={6}>
-                      {/* provide a title */}
                       <p className="text-2xl font-bold dark:text-white">Outgoing Weight by Goods Type:</p>
                       <br/>
                       <PieChart
@@ -421,7 +691,7 @@ const Dashboard = () => {
                             </Typography>
                             <br/>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                              {widgetData.data.this_month.incoming}
+                              {weightTransactionWidgetData.this_month.incoming}
                             </Typography>
                           </CardContent>
                         </Card>
@@ -434,7 +704,7 @@ const Dashboard = () => {
                             </Typography>
                             <br/>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                              {widgetData.data.this_month.outgoing}
+                              {weightTransactionWidgetData.this_month.outgoing}
                             </Typography>
                           </CardContent>
                         </Card>
@@ -477,7 +747,6 @@ const Dashboard = () => {
                 <div className="flex justify-center items-center">
                   <Grid container spacing={2}>
                     <Grid item xs={6}>
-                      {/* provide a title */}
                       <p className="text-2xl font-bold dark:text-white">Incoming Weight by Goods Type:</p>
                       <br/>
                       <PieChart
@@ -508,7 +777,6 @@ const Dashboard = () => {
                       />
                     </Grid>
                     <Grid item xs={6}>
-                      {/* provide a title */}
                       <p className="text-2xl font-bold dark:text-white">Outgoing Weight by Goods Type:</p>
                       <br/>
                       <PieChart
@@ -541,6 +809,10 @@ const Dashboard = () => {
                   </Grid>
                 </div>
 
+                <br/>
+                <Divider sx={{bgcolor:'white'}}></Divider>
+                <br/>
+
             </div>
             :
             <div className="flex justify-center items-center h-96">
@@ -548,8 +820,733 @@ const Dashboard = () => {
             </div>
           }
 
+          { internalTransactionWidgetData ? 
+
+                  <div>
+                                
+                    <br/>
+
+                    <h3 className="text-2xl font-bold underline dark:text-white">Summary of internal transaction data:</h3>
+
+                    <br/>
+
+                    <h4 className="text-2xl font-bold underline dark:text-white">Todays's Data:</h4>
+
+                    <br/>
+
+                    {/* only need to show 2 cards one to show total weight handled and one for total work mount */}
+
+                    <Grid sx={{ flexGrow: 1 }} container spacing={5}>
+                      <Grid item xs={12}>
+                        <Grid container justifyContent="center" spacing={5}>
+                          <Grid item>
+                            <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
+                              <CardContent>
+                                <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
+                                  Total Weight Handled:
+                                </Typography>
+                                <br/>
+                                <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
+                                  {internalTransactionWidgetData.today.goods_weight.reduce((acc: number, curr: any)=> acc + curr.value, 0)} kg
+                                </Typography>
+                              </CardContent>
+                            </Card>
+                          </Grid>
+                          <Grid item>
+                            <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
+                              <CardContent>
+                                <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
+                                  Total Work Amount:
+                                </Typography>
+                                <br/>
+                                <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
+                                  {internalTransactionWidgetData.today.work_amount.reduce((acc: number, curr: any)=> acc + curr.value, 0)}
+                                </Typography>
+                              </CardContent>
+                            </Card>
+                          </Grid>
+                      </Grid>
+                   </Grid>
+                  </Grid>
+
+                  <br/>
+                  <br/>
+                  <br/>
+
+                  {/* Now pie chart for today's goods weight and work amount */}
+                  <div className="flex justify-center items-center">
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <p className="text-2xl font-bold dark:text-white">Weight by Goods Type:</p>
+                      <br/>
+                      <PieChart
+                        series={[
+                          {
+                            arcLabel: (item) => `${item.value} kg`,
+                            data: internalTodayGoodsWeight,
+                            highlightScope: { faded: 'global', highlighted: 'item' },
+                            faded: { innerRadius: 30, additionalRadius: -30, color: 'gray' },
+                          },
+                        ]}
+                        colors={cheerfulFiestaPalette}
+                        slotProps={{
+                          legend: {
+                            labelStyle: { 
+                              fontSize: 15,
+                              fill: 'white'
+                             },
+                          }
+                        }}
+                        sx={{
+                          [`& .${pieArcLabelClasses.root}`]: {
+                            fill: 'white',
+                            fontWeight: 'bold',
+                          },
+                        }}
+                        height={250}
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <p className="text-2xl font-bold dark:text-white">Work Amount by Goods Type:</p>
+                      <br/>
+                      <PieChart
+                        series={[
+                          {
+                            arcLabel: (item) => `${item.value} kg`,
+                            data: internalTodayWorkAmount,
+                            highlightScope: { faded: 'global', highlighted: 'item' },
+                            faded: { innerRadius: 30, additionalRadius: -30, color: 'gray' },
+                          },
+                        ]}
+                        colors={mangoFusionPalette}
+                        slotProps={{
+                          legend: {
+                            labelStyle: { 
+                              fontSize: 15,
+                              fill: 'white'
+                             },
+                          }
+                        }}
+                        sx={{
+                          [`& .${pieArcLabelClasses.root}`]: {
+                            fill: 'white',
+                            fontWeight: 'bold',
+                          },
+                        }}
+                        height={250}
+                      />
+                    </Grid>
+                  </Grid>
+                </div>
+
+                <br/>
+                <Divider sx={{bgcolor:'white'}}></Divider>
+                <br/>
+
+                
+                {/* Similar to today's data, display this week's data */}
+                <br/>
+                <h4 className="text-2xl font-bold underline dark:text-white">This Week's Data:</h4>
+
+                <br/>
+
+                <Grid sx={{ flexGrow: 1 }} container spacing={5}>
+                  <Grid item xs={12}>
+                    <Grid container justifyContent="center" spacing={5}>
+                      <Grid item>
+                        <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
+                          <CardContent>
+                            <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
+                              Total Weight Handled:
+                            </Typography>
+                            <br/>
+                            <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
+                              {internalTransactionWidgetData.this_week.goods_weight.reduce((acc: number, curr: any)=> acc + curr.value, 0)} kg
+                            </Typography>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                      <Grid item>
+                        <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
+                          <CardContent>
+                            <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
+                              Total Work Amount:
+                            </Typography>
+                            <br/>
+                            <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
+                              {internalTransactionWidgetData.this_week.work_amount.reduce((acc: number, curr: any)=> acc + curr.value, 0)}
+                            </Typography>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    </Grid>
+                  </Grid>
+
+                </Grid>
+
+                <br/>
+                <br/>
+                <br/>
+
+                {/* Now pie chart for this week's goods weight and work amount */}
+                <div className="flex justify-center items-center">
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <p className="text-2xl font-bold dark:text-white">Weight by Goods Type:</p>
+                      <br/>
+                      <PieChart
+                        series={[
+                          {
+                            arcLabel: (item) => `${item.value} kg`,
+                            data: internalThisWeekGoodsWeight,
+                            highlightScope: { faded: 'global', highlighted: 'item' },
+                            faded: { innerRadius: 30, additionalRadius: -30, color: 'gray' },
+                          },
+                        ]}
+                        colors={cheerfulFiestaPalette}
+                        slotProps={{
+                          legend: {
+                            labelStyle: { 
+                              fontSize: 15,
+                              fill: 'white'
+                             },
+                          }
+                        }}
+                        sx={{
+                          [`& .${pieArcLabelClasses.root}`]: {
+                            fill: 'white',
+                            fontWeight: 'bold',
+                          },
+                        }}
+                        height={250}
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <p className="text-2xl font-bold dark:text-white">Work Amount by Goods Type:</p>
+                      <br/>
+                      <PieChart
+                        series={[
+                          {
+                            arcLabel: (item) => `${item.value} kg`,
+                            data: internalThisWeekWorkAmount,
+                            highlightScope: { faded: 'global', highlighted: 'item' },
+                            faded: { innerRadius: 30, additionalRadius: -30, color: 'gray' },
+                          },
+                        ]}
+                        colors={mangoFusionPalette}
+                        slotProps={{
+                          legend: {
+                            labelStyle: { 
+                              fontSize: 15,
+                              fill: 'white'
+                             },
+                          }
+                        }}
+                        sx={{
+                          [`& .${pieArcLabelClasses.root}`]: {
+                            fill: 'white',
+                            fontWeight: 'bold',
+                          },
+                        }}
+                        height={250}
+                      />
+                    </Grid>
+                  </Grid>
+                </div>
+
+                <br/>
+                <Divider sx={{bgcolor:'white'}}></Divider>
+                <br/>
+
+                {/* Similar to today's data, display this month's data */}
+                <br/>
+
+                <h4 className="text-2xl font-bold underline dark:text-white">This Month's Data:</h4>
+
+                <br/>
+
+                <Grid sx={{ flexGrow: 1 }} container spacing={5}>
+                  <Grid item xs={12}>
+                    <Grid container justifyContent="center" spacing={5}>
+                      <Grid item>
+                        <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
+                          <CardContent>
+                            <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
+                              Total Weight Handled:
+                            </Typography>
+                            <br/>
+                            <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
+                              {internalTransactionWidgetData.this_month.goods_weight.reduce((acc: number, curr: any)=> acc + curr.value, 0)} kg
+                            </Typography>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                      <Grid item>
+                        <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
+                          <CardContent>
+                            <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
+                              Total Work Amount:
+                            </Typography>
+                            <br/>
+                            <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
+                              {internalTransactionWidgetData.this_month.work_amount.reduce((acc: number, curr: any)=> acc + curr.value, 0)} 
+                            </Typography>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    </Grid>
+                  </Grid>
+                </Grid>
+
+                <br/>
+                <br/>
+                <br/>
+
+                {/* Now pie chart for this month's goods weight and work amount */}
+                <div className="flex justify-center items-center">
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <p className="text-2xl font-bold dark:text-white">Weight by Goods Type:</p>
+                      <br/>
+                      <PieChart
+                        series={[
+                          {
+                            arcLabel: (item) => `${item.value} kg`,
+                            data: internalThisMonthGoodsWeight,
+                            highlightScope: { faded: 'global', highlighted: 'item' },
+                            faded: { innerRadius: 30, additionalRadius: -30, color: 'gray' },
+                          },
+                        ]}
+                        colors={cheerfulFiestaPalette}
+                        slotProps={{
+                          legend: {
+                            labelStyle: { 
+                              fontSize: 15,
+                              fill: 'white'
+                             },
+                          }
+                        }}
+                        sx={{
+                          [`& .${pieArcLabelClasses.root}`]: {
+                            fill: 'white',
+                            fontWeight: 'bold',
+                          },
+                        }}
+                        height={250}
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <p className="text-2xl font-bold dark:text-white">Work Amount by Goods Type:</p>
+                      <br/>
+                      <PieChart
+                        series={[
+                          {
+                            arcLabel: (item) => `${item.value} kg`,
+                            data: internalThisMonthWorkAmount,
+                            highlightScope: { faded: 'global', highlighted: 'item' },
+                            faded: { innerRadius: 30, additionalRadius: -30, color: 'gray' },
+                          },
+                        ]}
+                        colors={mangoFusionPalette}
+                        slotProps={{
+                          legend: {
+                            labelStyle: { 
+                              fontSize: 15,
+                              fill: 'white'
+                             },
+                          }
+                        }}
+                        sx={{
+                          [`& .${pieArcLabelClasses.root}`]: {
+                            fill: 'white',
+                            fontWeight: 'bold',
+                          },
+                        }}
+                        height={250}
+                      />
+                    </Grid>
+                  </Grid>
+                </div>
+                
+                
+                <br/>
+                <Divider sx={{bgcolor:'white'}}></Divider>
+                <br/>
+
+
+                </div>
+              : 
+              <div className="flex justify-center items-center h-96">
+                <CircularProgress />
+              </div>
+          }
+
+
+          { externalTransactionWidgetData ?
+
+            // with external transaction data, we only need to show the total weight handled and total external amount
+            //sepearation in pie char by company name
+
+              <div>
+                                  
+                  <br/>
+
+                  <h3 className="text-2xl font-bold underline dark:text-white">Summary of External transaction data:</h3>
+
+                  <br/>
+
+                  <h4 className="text-2xl font-bold underline dark:text-white">Todays's Data:</h4>
+
+                  <br/>
+
+                  {/* only need to show 2 cards one to show total weight handled and one for total external amount */}
+
+                  <Grid sx={{ flexGrow: 1 }} container spacing={5}>
+                      <Grid item xs={12}>
+                        <Grid container justifyContent="center" spacing={5}>
+                          <Grid item>
+                            <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
+                              <CardContent>
+                                <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
+                                  Total Vehicle Weight Handled:
+                                </Typography>
+                                <br/>
+                                <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
+                                  {externalTransactionWidgetData.today.vehicle_weight.reduce((acc: number, curr: any)=> acc + curr.value, 0)} kg
+                                </Typography>
+                              </CardContent>
+                            </Card>
+                          </Grid>
+                          <Grid item>
+                            <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
+                              <CardContent>
+                                <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
+                                  Total External Amount:
+                                </Typography>
+                                <br/>
+                                <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
+                                  {externalTransactionWidgetData.today.external_amount.reduce((acc: number, curr: any)=> acc + curr.value, 0)} 
+                                </Typography>
+                              </CardContent>
+                            </Card>
+                          </Grid>
+                      </Grid>
+                    </Grid>
+                  </Grid>
+
+                  <br/>
+                  <br/>
+                  <br/>
+
+                  {/* Now pie chart for today's vehicle weight and external amount */}
+                  <div className="flex justify-center items-center">
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <p className="text-2xl font-bold dark:text-white">Weight by Company:</p>
+                      <br/>
+                      <PieChart
+                        series={[
+                          {
+                            arcLabel: (item) => `${item.value} kg`,
+                            data: externalTodayVehicleWeight,
+                            highlightScope: { faded: 'global', highlighted: 'item' },
+                            faded: { innerRadius: 30, additionalRadius: -30, color: 'gray' },
+                          },
+                        ]}
+                        colors={cheerfulFiestaPalette}
+                        slotProps={{
+                          legend: {
+                            labelStyle: { 
+                              fontSize: 15,
+                              fill: 'white'
+                             },
+                          }
+                        }}
+                        sx={{
+                          [`& .${pieArcLabelClasses.root}`]: {
+                            fill: 'white',
+                            fontWeight: 'bold',
+                          },
+                        }}
+                        height={250}
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <p className="text-2xl font-bold dark:text-white">External Amount by Company:</p>
+                      <br/>
+                      <PieChart
+                        series={[
+                          {
+                            arcLabel: (item) => `${item.value} `,
+                            data: externalTodayExternalAmount,
+                            highlightScope: { faded: 'global', highlighted: 'item' },
+                            faded: { innerRadius: 30, additionalRadius: -30, color: 'gray' },
+                          },
+                        ]}
+                        colors={mangoFusionPalette}
+                        slotProps={{
+                          legend: {
+                            labelStyle: { 
+                              fontSize: 15,
+                              fill: 'white'
+                             },
+                          }
+                        }}
+                        sx={{
+                          [`& .${pieArcLabelClasses.root}`]: {
+                            fill: 'white',
+                            fontWeight: 'bold',
+                          },
+                        }}
+                        height={250}
+                      />
+                    </Grid>
+                  </Grid>
+                </div>
+
+                <br/>
+                <Divider sx={{bgcolor:'white'}}></Divider>
+                <br/>
+
+                
+                {/* Similar to today's data, display this week's data */}
+                <br/>
+                <h4 className="text-2xl font-bold underline dark:text-white">This Week's Data:</h4>
+
+                <br/>
+
+                <Grid sx={{ flexGrow: 1 }} container spacing={5}>
+                  <Grid item xs={12}>
+                    <Grid container justifyContent="center" spacing={5}>
+                      <Grid item>
+                        <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
+                          <CardContent>
+                            <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
+                              Total Vehicle Weight Handled:
+                            </Typography>
+                            <br/>
+                            <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
+                              {externalTransactionWidgetData.this_week.vehicle_weight.reduce((acc: number, curr: any)=> acc + curr.value, 0)} kg
+                            </Typography>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                      <Grid item>
+                        <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
+                          <CardContent>
+                            <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
+                              Total External Amount:
+                            </Typography>
+                            <br/>
+                            <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
+                              {externalTransactionWidgetData.this_week.external_amount.reduce((acc: number, curr: any)=> acc + curr.value, 0)} 
+                            </Typography>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    </Grid>
+                  </Grid>
+                </Grid>
+
+                <br/>
+                <br/>
+                <br/>
+
+                {/* Now pie chart for this week's vehicle weight and external amount */}
+                <div className="flex justify-center items-center">
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <p className="text-2xl font-bold dark:text-white">Weight by Company:</p>
+                      <br/>
+                      <PieChart
+                        series={[
+                          {
+                            arcLabel: (item) => `${item.value} kg`,
+                            data: externalThisWeekVehicleWeight,
+                            highlightScope: { faded: 'global', highlighted: 'item' },
+                            faded: { innerRadius: 30, additionalRadius: -30, color: 'gray' },
+                          },
+                        ]}
+                        colors={cheerfulFiestaPalette}
+                        slotProps={{
+                          legend: {
+                            labelStyle: { 
+                              fontSize: 15,
+                              fill: 'white'
+                             },
+                          }
+                        }}
+                        sx={{
+                          [`& .${pieArcLabelClasses.root}`]: {
+                            fill: 'white',
+                            fontWeight: 'bold',
+                          },
+                        }}
+                        height={250}
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <p className="text-2xl font-bold dark:text-white">External Amount by Company:</p>
+                      <br/>
+                      <PieChart
+                        series={[
+                          {
+                            arcLabel: (item) => `${item.value} `,
+                            data: externalThisWeekExternalAmount,
+                            highlightScope: { faded: 'global', highlighted: 'item' },
+                            faded: { innerRadius: 30, additionalRadius: -30, color: 'gray' },
+                          },
+                        ]}
+                        colors={mangoFusionPalette}
+                        slotProps={{
+                          legend: {
+                            labelStyle: { 
+                              fontSize: 15,
+                              fill: 'white'
+                             },
+                          }
+                        }}
+                        sx={{
+                          [`& .${pieArcLabelClasses.root}`]: {
+                            fill: 'white',
+                            fontWeight: 'bold',
+                          },
+                        }}
+                        height={250}
+                      />
+                    </Grid>
+                  </Grid>
+                </div>
+
+                <br/>
+                <Divider sx={{bgcolor:'white'}}></Divider>
+                <br/>
+
+                {/* Similar to today's data, display this month's data */}
+                <br/>
+
+                <h4 className="text-2xl font-bold underline dark:text-white">This Month's Data:</h4>
+
+                <br/>
+
+                <Grid sx={{ flexGrow: 1 }} container spacing={5}>
+                  <Grid item xs={12}>
+                    <Grid container justifyContent="center" spacing={5}>
+                      <Grid item>
+                        <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
+                          <CardContent>
+                            <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
+                              Total Vehicle Weight Handled:
+                            </Typography>
+                            <br/>
+                            <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
+                              {externalTransactionWidgetData.this_month.vehicle_weight.reduce((acc: number, curr: any)=> acc + curr.value, 0)} kg
+                            </Typography>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                      <Grid item>
+                        <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
+                          <CardContent>
+                            <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
+                              Total External Amount:
+                            </Typography>
+                            <br/>
+                            <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
+                              {externalTransactionWidgetData.this_month.external_amount.reduce((acc: number, curr: any)=> acc + curr.value, 0)} 
+                            </Typography>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    </Grid>
+                  </Grid>
+                </Grid>
+
+                <br/>
+                <br/>
+                <br/>
+
+                {/* Now pie chart for this month's vehicle weight and external amount */}
+                <div className="flex justify-center items-center">
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <p className="text-2xl font-bold dark:text-white">Weight by Company:</p>
+                      <br/>
+                      <PieChart
+                        series={[
+                          {
+                            arcLabel: (item) => `${item.value} kg`,
+                            data: externalThisMonthVehicleWeight,
+                            highlightScope: { faded: 'global', highlighted: 'item' },
+                            faded: { innerRadius: 30, additionalRadius: -30, color: 'gray' },
+                          },
+                        ]}
+                        colors={cheerfulFiestaPalette}
+                        slotProps={{
+                          legend: {
+                            labelStyle: { 
+                              fontSize: 15,
+                              fill: 'white'
+                             },
+                          }
+                        }}
+                        sx={{
+                          [`& .${pieArcLabelClasses.root}`]: {
+                            fill: 'white',
+                            fontWeight: 'bold',
+                          },
+                        }}
+                        height={250}
+                      />
+                    </Grid>
+                    <Grid item xs={6}>
+                      <p className="text-2xl font-bold dark:text-white">External Amount by Company:</p>
+                      <br/>
+                      <PieChart
+                        series={[
+                          {
+                            arcLabel: (item) => `${item.value} `,
+                            data: externalThisMonthExternalAmount,
+                            highlightScope: { faded: 'global', highlighted: 'item' },
+                            faded: { innerRadius: 30, additionalRadius: -30, color: 'gray' },
+                          },
+                        ]}
+                        colors={mangoFusionPalette}
+                        slotProps={{
+                          legend: {
+                            labelStyle: { 
+                              fontSize: 15,
+                              fill: 'white'
+                             },
+                          }
+                        }}
+                        sx={{
+                          [`& .${pieArcLabelClasses.root}`]: {
+                            fill: 'white',
+                            fontWeight: 'bold',
+                          },
+                        }}
+                        height={250}
+                      />
+                    </Grid>
+                  </Grid>
+                </div>
+
+                <br/>
+                <Divider sx={{bgcolor:'white'}}></Divider>
+                <br/>
+            </div>
+            :
+
+            <div className="flex justify-center items-center h-96">
+              <CircularProgress />
+            </div>
+        
+          }
+
         </div>
       </div>
+      
     </div>
 
 

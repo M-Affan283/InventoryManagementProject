@@ -16,23 +16,112 @@ const UserInfoSchema = new mongoose.Schema({
     email: {type:String, required: true},
     hashedPassword: {type:String, required: true},
     //role --> either admin, supervisor, or employee
-    role: {type:String, required: true, enum: ["admin", "supervisor", "employee"]}
+    role: {type:String, required: true, enum: ["admin", "employee"]},
+    date_created: {type:Date, required: true}, //date of account creation
+    created_by: {type:mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: false}, //user who created the account
+    date_updated: {type:Date, required: false}, //date of last update,
+    updated_by: {type:mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: false}, //user who last updated the account
+    is_deleted: {type:Boolean, default: false}, //if the account is deleted (1) or not (0)
+    date_deleted: {type:Date, required: false}, //date of deletion
+    delete_by: {type:mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: false}, //user who deleted the account
+    delete_reason: {type:String, required: false} //reason for deletion
 });
 
-const GoodsContainerSchema = new mongoose.Schema({
-    type: {type:String, required: true}, //incoming or outgoing
-    serial_no: {type:String, required: true}, //serial number of the container
+const WeighingTransactionsSchema = new mongoose.Schema({
+    type: {type: String, required: true}, //incoming or outgoing
     truck_no: {type:String, required: true}, //truck number
     driver_name: {type:String, required: true}, //name of the driver
     driver_contact: {type:String, required: true}, //contact of the driver
-    goods_type: {type:String, required: true}, //type of goods
+    goods_type_id: {type:mongoose.Schema.Types.ObjectId, ref: "GoodsType", required: true}, //type of goods
     empty_weight: {type:Number, default: 0}, //weight of the truck
     filled_weight: {type:Number, default: 0}, //weight of the truck after loading/unloading
     goods_weight: {type:Number, default: 0}, //weight of the goods
-    date_created: {type:Date, required: true},
-    date_updated: {type:Date, required: true},
-    //employee handling the goods
-    employee: {type:mongoose.Schema.Types.ObjectId, ref: "User", required: true}
+    weight_adjust: {type:Number, default: 0}, //adjustment in weight
+    //date of filled truck weight not required immediately
+    date_filled_weight: {type:Date, required: false}, //date of filled truck weight
+    date_empty_weight: {type:Date, required: true}, //date of empty truck weight. essentially the date of creation
+    is_deleted: {type:Boolean, default: false}, //if the transaction is deleted (1) or not (0)
+    date_deleted: {type:Date, required: false}, //date of deletion
+    delete_by: {type:mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: false}, //user who deleted the transaction
+    delete_reason: {type:String, required: false}, //reason for deletion
+    employee: {type:mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: true} //employee handling the goods
+});
+
+//internal labour handling the goods
+const ContractorSchema = new mongoose.Schema({
+    contractor_code: {type:String, required: true}, //contractor code
+    contractor_name: {type:String, required: true}, //contractor name
+    contractor_contact: {type:String, required: true}, //contractor contact
+    date_created: {type:Date, required: true}, //date of account creation
+    created_by: {type:mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: false}, //user who created the account
+    date_updated: {type:Date, required: false}, //date of last update,
+    updated_by: {type:mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: false}, //user who last updated the account
+    is_deleted: {type:Boolean, default: false}, //if the account is deleted (1) or not (0)
+    date_deleted: {type:Date, required: false}, //date of deletion
+    delete_by: {type:mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: false}, //user who deleted the account
+    delete_reason: {type:String, required: false} //reason for deletion
+
+});
+
+const ContractorWorkSchema = new mongoose.Schema({
+    contractor_id: {type:mongoose.Schema.Types.ObjectId, ref: "Contractor", required: true}, //contractor id
+    goods_type_id: {type:mongoose.Schema.Types.ObjectId, ref: "GoodsType", required: true}, //type of goods
+    goods_weight: {type:Number, default: 0}, //weight of the goods
+    goods_rate: {type:Number, default: 0}, //rate of the goods
+    work_amount: {type:Number, default: 0}, //amount of work done rate*weight
+    date_created: {type:Date, required: true}, //date of account creation
+    created_by: {type:mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: false}, //user who created the account
+    date_updated: {type:Date, required: false}, //date of last update,
+    updated_by: {type:mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: false}, //user who last updated the account
+    is_deleted: {type:Boolean, default: false}, //if the account is deleted (1) or not (0)
+    date_deleted: {type:Date, required: false}, //date of deletion
+    delete_by: {type:mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: false}, //user who deleted the account
+    delete_reason: {type:String, required: false} //reason for deletion
+});
+
+const GoodsTypeSchema = new mongoose.Schema({
+    good_code: {type:String, required: true}, //goods code
+    good_name: {type:String, required: true}, //goods name
+    good_weight: {type:Number, default: 0}, //weight of the goods inventory available
+    good_rate: {type:Number, default: 0}, //rate of the goods
+    date_created: {type:Date, required: true}, //date of account creation
+    created_by: {type:mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: false}, //user who created the account
+    date_updated: {type:Date, required: false}, //date of last update,
+    updated_by: {type:mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: false}, //user who last updated the account
+    is_deleted: {type:Boolean, default: false}, //if the account is deleted (1) or not (0)
+    date_deleted: {type:Date, required: false}, //date of deletion
+    delete_by: {type:mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: false}, //user who deleted the account
+    delete_reason: {type:String, required: false} //reason for deletion
+});
+
+const ExternalTransactionsSchema = new mongoose.Schema({
+    company_name: {type:String, required: true}, //company name
+    truck_no: {type:String, required: true}, //truck number
+    driver_name: {type:String, required: true}, //name of the driver
+    driver_contact: {type:String, required: true}, //contact of the driver
+    vehicle_weight: {type:Number, default: 0}, //weight of the vehicle
+    external_rate: {type:Number, default: 0}, //rate of the goods
+    external_amount: {type:Number, default: 0}, //amount of the goods rate*weight
+    date_created: {type:Date, required: true}, //date of account creation
+    date_updated: {type:Date, required: false}, //date of last update,
+    updated_by: {type:mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: false}, //user who last updated the account
+    created_by: {type:mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: false}, //user who created the account
+    is_deleted: {type:Boolean, default: false}, //if the account is deleted (1) or not (0)
+    date_deleted: {type:Date, required: false}, //date of deletion
+    delete_by: {type:mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: false}, //user who deleted the account
+    delete_reason: {type:String, required: false} //reason for deletion
+})
+
+const ExternalRateSchema = new mongoose.Schema({
+    extrate_amount: {type:Number, default: 0}, //rate of the goods
+    date_created: {type:Date, required: true}, //date of account creation
+    created_by: {type:mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: false}, //user who created the account
+    date_updated: {type:Date, required: false}, //date of last update,
+    updated_by: {type:mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: false}, //user who last updated the account
+    is_deleted: {type:Boolean, default: false}, //if the account is deleted (1) or not (0)
+    date_deleted: {type:Date, required: false}, //date of deletion
+    delete_by: {type:mongoose.Schema.Types.ObjectId, ref: "UserInfo", required: false}, //user who deleted the account
+    delete_reason: {type:String, required: false} //reason for deletion
 });
 
 const NotificationsSchema = new mongoose.Schema({
@@ -45,12 +134,21 @@ const NotificationsSchema = new mongoose.Schema({
 })
 
 
-//just to hole the 8-10 type of goods being handled in this app
-const goodsTypeSchema = new mongoose.Schema({
-    name: {type:String, required: true},
-});
-
-export const User = mongoose.model("User", UserInfoSchema);
-export const GoodsContainer = mongoose.model("GoodsContainer", GoodsContainerSchema);
+export const User = mongoose.model("UserInfo", UserInfoSchema);
+export const WeighingTransactions = mongoose.model("WeighingTransactions", WeighingTransactionsSchema);
+export const Contractor = mongoose.model("Contractor", ContractorSchema);
+export const ContractorWork = mongoose.model("ContractorWork", ContractorWorkSchema);
+export const GoodsType = mongoose.model("GoodsType", GoodsTypeSchema);
+export const ExternalTransactions = mongoose.model("ExternalTransactions", ExternalTransactionsSchema);
+export const ExternalRate = mongoose.model("ExternalRate", ExternalRateSchema);
 export const Notifications = mongoose.model("Notifications", NotificationsSchema);
-export const GoodsType = mongoose.model("GoodsType", goodsTypeSchema);
+
+// //just to hole the 8-10 type of goods being handled in this app
+// const goodsTypeSchema = new mongoose.Schema({
+//     name: {type:String, required: true},
+// });
+
+// export const User = mongoose.model("User", UserInfoSchema);
+// export const GoodsContainer = mongoose.model("GoodsContainer", GoodsContainerSchema);
+// export const Notifications = mongoose.model("Notifications", NotificationsSchema);
+// export const GoodsType = mongoose.model("GoodsType", goodsTypeSchema);

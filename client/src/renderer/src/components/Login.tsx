@@ -37,7 +37,7 @@ const Login = () => {
                     // localStorage.setItem('user', JSON.stringify({id: res.data.user.id, firstName: res.data.user.firstName, lastName: res.data.user.lastName, email: res.data.user.email, role: res.data.user.role}));
                     // localStorage.setItem('isLogged', JSON.stringify(true));
 
-                    nav('/dashboard'); //uncomment later
+                    res.data.user.role === "admin" ? nav("/dashboard") : nav("/profile");
                     // nav("/notifications")
 
                 }

@@ -1,5 +1,5 @@
 //all user routes from user_controller.js go here
-import { login, createUser, deleteUser, updatePassword, resetPassword, getAllUsers, getUserNotifications } from "../controllers/user_controller.js";
+import { login, createUser, deleteUser, updatePassword, resetPassword, getAllUsers, getUserNotifications, addContractor, deleteContractor, getAllContractors } from "../controllers/user_controller.js";
 import express from 'express';
 
 const user_router = express.Router();
@@ -11,5 +11,8 @@ user_router.post('/updatePassword', updatePassword);
 user_router.post('/resetPassword', resetPassword);
 user_router.get('/getAllUsers', getAllUsers);
 user_router.get('/getNotifications', getUserNotifications);
+user_router.post('/addContractor', addContractor);
+user_router.delete('/deleteContractor', deleteContractor);
+user_router.get('/getAllContractors', getAllContractors);
 
 export default user_router;

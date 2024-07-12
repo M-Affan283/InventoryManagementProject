@@ -15,14 +15,14 @@ interface UserContextType {
     comPort: string;
     baudRate: number;
     //array of good types that are added to containers
-    goodsType: string[];
+    goodsType: any[];
     apiUrl: string;
     //set user as user or null
     setUser: (user: User | null) => void;
     setIsLogged: (isLogged: boolean) => void;
     setComPort: (comPort: string) => void;
     setBaudRate: (baudRate: number) => void;
-    setGoodsType: (goodsType: string[]) => void;
+    setGoodsType: (goodsType: any[]) => void;
 }
 
 // Create the context with a default value
@@ -31,7 +31,7 @@ export const UserContext = createContext<UserContextType>({
     isLogged: false,
     comPort: 'COM5',
     baudRate: 1200,
-    goodsType: ["Item A", "Item B"],
+    goodsType: [],
     apiUrl: "",
     setUser: () => {},
     setIsLogged: () => {},

@@ -1,5 +1,5 @@
 //Handle all user related routes e.g. login, signup, etc
-import { User,Notifications, GoodsType } from "../models/schema.js";
+import { User,Notifications, GoodsType, Contractor, ContractorWork } from "../models/schema.js";
 import bcrypt from "bcryptjs";
 
 export const login = async (req,res) => 
@@ -38,9 +38,10 @@ export const login = async (req,res) =>
                 //get all goods types
                 let goods_types = await GoodsType.find({});
 
-                //get only names of goods types
-                goods_types = goods_types.map((type) => type.name);
-
+                //get only names and id of goods types and store as object
+                goods_types = goods_types.map((type) => {
+                    return {good_name: type.good_name, good_code: type.good_code, good_rate: type.good_rate};
+                });
 
                 return res.status(200).json({message: "Login successful", user: user_present, goods_types: goods_types});
             }
@@ -65,7 +66,7 @@ export const login = async (req,res) =>
 //for admin
 export const createUser = async (req,res) =>
 {
-    const {firstName, lastName, email, password, role} = req.body;
+    const {firstName, lastName, email, password, role, creator_email} = req.body;
     console.log("Create user request for email: ", email);
 
     try
@@ -77,6 +78,18 @@ export const createUser = async (req,res) =>
            return res.status(400).json({message: "User already exists"});
         }
 
+        const creator = await User.findOne({email: creator_email});
+
+        if(!creator)
+        {
+            return res.status(400).json({message: "Employee not found"});
+        }
+
+        if(creator.role !== "admin")
+        {
+            return res.status(400).json({message: "Only admin can create user"});
+        }
+
         //hash password
         const passwordHash = await bcrypt.hash(password, 10);
 
@@ -85,7 +98,14 @@ export const createUser = async (req,res) =>
             lastName: lastName,
             email: email,
             hashedPassword: passwordHash,
-            role: role
+            role: role,
+            date_created: new Date(),
+            created_by: creator._id,
+            // date_updated: new Date(),
+            is_deleted: false,
+            date_deleted: null,
+            delete_by: null,
+            delete_reason: null
         });
 
         await Notifications.create({
@@ -106,16 +126,44 @@ export const createUser = async (req,res) =>
 
 export const deleteUser = async (req,res) =>
 {
-    const {email} = req.body;
+    const {email, deletedBy} = req.body;
     console.log("Delete user request for email: ", email);
 
     try
     {
         const user_present = await User.findOne({email: email});
+        const deletor = await User.findOne({email: deletedBy});
 
         if(user_present)
         {
-            User.deleteOne({email: email});
+            //delete user
+
+            if(deletedBy.role !== "admin")
+            {
+                return res.status(400).json({message: "Only admin can delete user"});
+            }
+
+            if(user_present.is_deleted)
+            {
+                return res.status(400).json({message: "User already deleted"});
+            }
+
+            const admin_notifications = await Notifications.findOne({user: deletor.email});
+
+            let notif_data = {notifType: "user_delete", data: `User ${email} was deleted by ${deletedBy.email}`, time: new Date()};
+
+            admin_notifications.notifications.push(notif_data);
+
+
+
+            user_present.is_deleted = true;
+            user_present.date_deleted = new Date();
+            user_present.delete_by = deletor._id;
+            user_present.delete_reason = "Deleted by admin";
+            await user_present.save();
+            await admin_notifications.save();
+
+
             return res.status(200).json({message: `User ${email} deleted successfully`});
         }
         else
@@ -135,12 +183,18 @@ export const deleteUser = async (req,res) =>
 
 export const updatePassword = async (req,res) =>
 {
-    const {email,oldPassword, newPassword} = req.body;
+    const {email,oldPassword, newPassword, updator_email} = req.body;
     console.log("Update password request for email: ", email);
 
     try
     {
         const user_present = await User.findOne({email: email});
+        const updator = await User.findOne({email: updator_email})
+
+        if(updator.role !== "admin")
+        {
+            return res.status(400).json({message: "Only admin can update password"});
+        }
 
         if(user_present)
         {
@@ -166,7 +220,12 @@ export const updatePassword = async (req,res) =>
             employee_notifications.notifications.push(notif_data);
             admin_notifications.notifications.push(notif_data);
             
-            await User.updateOne({email: email}, {hashedPassword: newPasswordHash});
+            
+            user_present.hashedPassword = newPasswordHash;
+            user_present.date_updated = new Date();
+            user_present.updated_by = admin._id;
+            await user_present.save();
+
             await employee_notifications.save();
             await admin_notifications.save();
             
@@ -188,26 +247,35 @@ export const updatePassword = async (req,res) =>
 
 export const resetPassword = async (req,res) =>
 {
-    const {email, newPassword} = req.body;
+    const {email, newPassword, updator_email} = req.body;
     console.log("Reset password request for email: ", email);
 
     try
     {
         const user_present = await User.findOne({email: email});
+        const updator = await User.findOne({email: updator_email})
+
+        if(updator.role !== "admin")
+        {
+            return res.status(400).json({message: "Only admin can reset password"});
+        }
 
         if(user_present)
         {
             //update password
             const newPasswordHash = await bcrypt.hash(newPassword, 10);
 
-            User.updateOne({email: email}, {hashedPassword: newPasswordHash});
-
+            
             //add notification to employee queue
             const employee_notifications = await Notifications.findOne({user: user_present.email});
-
+            
             let notif_data = {notifType: "password_reset", data: `Your password was reset to ${newPassword}`, time: new Date()};
             employee_notifications.notifications.push(notif_data);
-
+            
+            user_present.hashedPassword = newPasswordHash;
+            user_present.date_updated = new Date();
+            user_present.updated_by = updator._id;
+            await user_present.save();
             await employee_notifications.save();
 
             return res.status(200).json({message: `Password reset successfully for ${email}`});
@@ -229,7 +297,7 @@ export const resetPassword = async (req,res) =>
 export const getAllUsers = async (req,res) =>
 {
     //similar pagination as goods
-   try
+    try
     {
 
         console.log("Req: ", req.query);
@@ -289,3 +357,127 @@ export const getUserNotifications = async (req,res) =>
         return res.status(500).json({message: "Internal server error"});
     }
 }
+
+//add labourer
+export const addContractor = async (req,res) =>
+{
+    const {contractor_code, contractor_name, contractor_contact, created_by} = req.body;
+    console.log("Add contractor request for time: ", Date.now());
+
+    try
+    {
+        const user_present = await User.findOne({email: created_by});
+        if(!user_present)
+        {
+            return res.status(400).json({message: "Employee not found"});
+        }
+
+        await Contractor.create({
+            contractor_code: contractor_code,
+            contractor_name: contractor_name,
+            contractor_contact: contractor_contact,
+            date_created: new Date(),
+            created_by: user_present._id,
+            // date_updated: new Date()
+        });
+
+        return res.status(200).json({message: "Contractor added successfully"});
+
+    }
+    catch(error)
+    {
+        console.log("Error: ", error);
+        return res.status(500).json({message: "Internal server error"});
+    }
+}
+
+//delete labourer
+export const deleteContractor = async (req,res) =>
+{
+    const {contractor_code, delete_reason, employee} = req.body;
+    console.log("Delete contractor request for time: ", Date.now());
+
+    try
+    {
+        const contractor = await Contractor.findOne({contractor_code: contractor_code});
+
+        if(!contractor)
+        {
+            return res.status(400).json({message: "Contractor not found"});
+        }
+
+        if(contractor.is_deleted)
+        {
+            return res.status(400).json({message: "Contractor already deleted"});
+        }
+
+        const user_present = await User.findOne({email: employee});
+
+        if(!user_present)
+        {
+            return res.status(400).json({message: "Employee not found"});
+        }
+
+        contractor.is_deleted = true;
+        contractor.date_deleted = new Date();
+        contractor.delete_by = user_present._id;
+        contractor.delete_reason = delete_reason;
+        await contractor.save();
+
+        return res.status(200).json({message: "Contractor deleted successfully"});
+
+    }
+    catch(error)
+    {
+        console.log("Error: ", error);
+        return res.status(500).json({message: "Internal server error"});
+    }
+}
+
+//list all labourers
+export const getAllContractors = async (req,res) =>
+{
+    console.log("Get all labourers request");
+
+    try
+    {
+        console.log("Req: ", req.query);
+        const {searchQuery="", page=1, limit=10} = req.query;
+
+        const searchFilter = searchQuery ? {
+            $or: [
+                {contractor_code: {$regex: searchQuery, $options: "i"}},
+                {contractor_name: {$regex: searchQuery, $options: "i"}},
+                {contractor_contact: {$regex: searchQuery, $options: "i"}}
+            ]
+        } : {};
+
+        const pageNumber = parseInt(page);
+        const limitNumber = parseInt(limit);
+
+        const skip = (pageNumber - 1) * limitNumber;
+
+        const contractors = await Contractor.find(searchFilter).limit(limitNumber).skip(skip);
+
+        const contractorsWithTotalAmount = await Promise.all(
+            contractors.map(async (contractor) => {
+                const contractor_works = await ContractorWork.find({ contractor_id: contractor._id });
+                let total_amount = 0;
+                contractor_works.forEach((work) => {
+                    total_amount += work.work_amount;
+                });
+                return {
+                    ...contractor.toObject(),
+                    total_amount
+                };
+            })
+        );
+    
+        return res.status(200).json({ contractors: contractorsWithTotalAmount });
+    }
+    catch(error)
+    {
+        console.log("Error: ", error);
+        return res.status(500).json({message: "Internal server error"});
+    }
+}   

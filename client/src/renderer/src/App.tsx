@@ -6,13 +6,19 @@ import Dashboard from './components/Dashboard'
 import Notifications from './components/Notifications';
 import Profile from './components/Profile';
 import AddForms from './components/Forms/AddForms';
-import IndividualContainer from './components/IndividualContainer';
-import AllContainers from './components/AllContainers';
 import AllEmployees from './components/AllEmployees';
+import AllContractors from './components/AllContractors';
+import AllGoodTypes from './components/AllGoodTypes';
 import Settings from './components/Settings';
+import ListWeightTransactions from './components/ListWeightTransactions';
+import ListInternalTransactions from './components/ListInternalTransactions';
+import ListExternalTransactions from './components/ListExternalTransactions';
+import IndividualWeightTransaction from './components/IndividualWeightTransaction';
+import IndividualInternalTransaction from './components/IndividualInternalTransaction';
+import IndividualExternalTransaction from './components/IndividualExternalTransaction';
 import "./assets/scrollbar.css"
 
-let temp_user: User = {firstName: "Muhammad", lastName: "Ali", email: "ali@outlook.com", role: "employee", id: "6661c260150c5d01991c3317"};
+let temp_user: User = {firstName: "Muhammad", lastName: "Ali", email: "maffan@outlook.com", role: "admin", id: "6661c260150c5d01991c3317"};
 
 function App(): JSX.Element {
   const [user, setUser] = useState<User | null>(null);
@@ -22,7 +28,7 @@ function App(): JSX.Element {
   const [desktopApp, setDesktopApp] = useState<boolean>(false); //to check if user is using the desktop app or running in browser
   const [comPort, setComPort] = useState<string>('COM5');
   const [baudRate, setBaudRate] = useState<number>(1200);
-  const [goodsType, setGoodsType] = useState<string[]>(["Item A", "Item B", "Item C"]);
+  const [goodsType, setGoodsType] = useState<any[]>([{good_name: "Aluminium", good_code: '1', good_rate: 100}, {good_name: "Steel", good_code: '2', good_rate: 200}]);
   const apiUrl = "http://localhost:5000";
   //check if user is using desktop app
   useEffect(()=>
@@ -59,10 +65,16 @@ function App(): JSX.Element {
           <Route path="/dashboard" element={isLogged ? <Dashboard /> : <Navigate to="/" />} />
           <Route path="/notifications" element={isLogged ? <Notifications /> : <Navigate to="/" />} />
           <Route path="/profile" element={isLogged ? <Profile /> : <Navigate to="/" />} />
-          <Route path="/addforms" element={isLogged ? <AddForms desktopApp={desktopApp}/> : <Navigate to="/" />} />
-          <Route path="/individualcontainer/:container_id" element={isLogged ? <IndividualContainer desktopApp={desktopApp} /> : <Navigate to="/" />} />
-          <Route path="/allcontainers" element={isLogged ? <AllContainers /> : <Navigate to="/" />} />
+          <Route path="/addforms/:form_type" element={isLogged ? <AddForms desktopApp={desktopApp}/> : <Navigate to="/" />} />
           <Route path="/allemployees" element={isLogged ? <AllEmployees /> : <Navigate to="/" />} />
+          <Route path="/allcontractors" element={isLogged ? <AllContractors /> : <Navigate to="/" />} />
+          <Route path="/allgoodtypes" element={isLogged ? <AllGoodTypes /> : <Navigate to="/" />} />
+          <Route path="/listtransactions" element={isLogged ? <ListWeightTransactions /> : <Navigate to="/" />} />
+          <Route path="/listintrecords" element={isLogged ? <ListInternalTransactions /> : <Navigate to="/" />} />
+          <Route path="/listextrecords" element={isLogged ? <ListExternalTransactions /> : <Navigate to="/" />} />
+          <Route path="/individualweighttransaction/:transaction_id" element={isLogged ? <IndividualWeightTransaction desktopApp={desktopApp} /> : <Navigate to="/" />} />
+          <Route path="/individualinttransaction/:transaction_id" element={isLogged ? <IndividualInternalTransaction desktopApp={desktopApp} /> : <Navigate to="/" />} />
+          <Route path="/individualexttransaction/:transaction_id" element={isLogged ? <IndividualExternalTransaction desktopApp={desktopApp} /> : <Navigate to="/" />} />
           <Route path="/settings" element={isLogged ? <Settings desktopApp={desktopApp}/> : <Navigate to="/" />} />
 
 
@@ -70,13 +82,22 @@ function App(): JSX.Element {
         {/* !!!!!!!!!!!!!!!!!! TESTING PATHS !!!!!!!!!!!!!!!!!!! */}
 
         {/* <Route path="/" element={isLogged ? <Dashboard /> : <Navigate to="/" />} /> */}
-        {/* <Route path="/" element={isLogged ? <AddForms desktopApp={desktopApp}/> : <Navigate to="/" />} /> */}
+        {/* <Route path="/addforms/:form_type" element={isLogged ? <AddForms desktopApp={desktopApp}/> : <Navigate to="/" />} /> */}
         {/* <Route path="/individualcontainer/:container_id" element={isLogged ? <IndividualContainer desktopApp={desktopApp} /> : <Navigate to="/" />} /> */}
         {/* <Route path="/" element={isLogged ? <Notifications desktopApp={desktopApp} /> : <Navigate to="/" />} /> */}
         {/* <Route path="/" element={isLogged ? <AllContainers /> : <Navigate to="/" />} /> */}
         {/* <Route path="/" element={isLogged ? <AllEmployees /> : <Navigate to="/" />} /> */}
         {/* <Route path="/" element={isLogged ? <Profile /> : <Navigate to="/" />} /> */}
         {/* <Route path="/" element={isLogged ? <Settings desktopApp={desktopApp} /> : <Navigate to="/" />} /> */}
+        {/* <Route path="/allemployees" element={isLogged ? <AllEmployees /> : <Navigate to="/" />} /> */}
+        {/* <Route path="/allcontractors" element={isLogged ? <AllContractors /> : <Navigate to="/" />} /> */}
+        {/* <Route path="/allgoodtypes" element={isLogged ? <AllGoodTypes /> : <Navigate to="/" />} /> */}
+        {/* <Route path="/" element={isLogged ? <ListWeightTransactions /> : <Navigate to="/" />} /> */}
+        {/* <Route path="/" element={isLogged ? <ListInternalTransactions /> : <Navigate to="/" />} /> */}
+        {/* <Route path="/" element={isLogged ? <ListExternalTransactions /> : <Navigate to="/" />} /> */}
+        {/* <Route path="/individualweighttransaction/:transaction_id" element={isLogged ? <IndividualWeightTransaction desktopApp={desktopApp} /> : <Navigate to="/" />} /> */}
+        {/* <Route path="/individualinttransaction/:transaction_id" element={isLogged ? <IndividualInternalTransaction desktopApp={desktopApp} /> : <Navigate to="/" />} /> */}
+        {/* <Route path="/individualexttransaction/:transaction_id" element={isLogged ? <IndividualExternalTransaction desktopApp={desktopApp} /> : <Navigate to="/" />} /> */}
 
         </Routes>
       </UserContext.Provider>

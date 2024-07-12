@@ -6,103 +6,101 @@ import axios from 'axios'
 import CustomSidebar from './Sidebar'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
-const AllEmployees = () => {
+const AllContractors = () => {
 
-  const [employees, setEmployees] = useState([]);
-  const [searchQuery, setSearchQuery] = useState<string>(""); //search query for filtering employees
-  const [serverResponse, setServerResponse] = useState<string>(""); //server response for fetching employees
-  const nav = useNavigate();
-  const {user, isLogged,apiUrl} = useContext(UserContext);
+    const [contractors, setContractors] = useState([]);
+    const [searchQuery, setSearchQuery] = useState<string>(""); //search query for filtering employees
+    const [serverResponse, setServerResponse] = useState<string>(""); //server response for fetching employees
+    const nav = useNavigate();
+    const {user, isLogged,apiUrl} = useContext(UserContext);
 
 
-  //pagination states
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(15);
+    //pagination states
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(15);
+    
+
+    useEffect(()=>
+    {
+
+        if(!isLogged || user?.role !== "admin")
+        {
+        nav('/');
+        }
+
+    },[])
+
+
+    const fetchData = async (searchQuery) =>
+    {
+        try
+        {
+            axios.get(`${apiUrl}/user/getAllContractors`, {params: {searchQuery: searchQuery, page: page, pageSize: pageSize}})
+            .then((res)=>
+            {
+                console.log("Contractors fetched successfully");
+                setContractors(res.data.contractors);
+                console.log(res.data.contractors);
+
+            })
+            .catch((err)=>
+            {
+                console.log("Failed to fetch contractors: ", err.response.data.message);
+                setServerResponse("Error fetching contractors");
+            })
+
+            }
+        catch(error)
+        {
+        console.log(error)
+        setServerResponse("Error fetching contractors");
+
+        }
+    }
+
+    useEffect(() => {
+        fetchData(searchQuery);
+    }, [page]);
   
-
-  useEffect(()=>
-  {
-
-    if(!isLogged || user?.role !== "admin")
-    {
-      nav('/');
+    // change back to page 1 if search query changes
+    useEffect(() => {
+        setPage(1);
+        fetchData(searchQuery);
+    }, [searchQuery]);
+  
+    // Pagination handlers
+    const nextPage = () => {
+        setPage(page + 1);
+    }
+  
+    const prevPage = () => {
+        setPage(page - 1);
     }
 
-  },[])
+    const contractor_columns = [
+        {
+            Header: 'Contractor Name',
+            accessor: 'contractor_name'
+        },
+        {
+            Header: 'Contractor Code',
+            accessor: 'contractor_code'
+        },
+        {
+            Header: 'Contractor Contact',
+            accessor: 'contractor_contact'
+        },
+        {
+            Header: "Total Work Amount",
+            accessor: "total_amount"
+        }
+    ]
 
-  const fetchData = async (searchQuery) =>
-  {
-    try
-    {
-      axios.get(`${apiUrl}/user/getAllUsers`, {params: {searchQuery: searchQuery, page: page, pageSize: pageSize}})
-      .then((res)=>
-      {
-        console.log("Employees fetched successfully");
-        setEmployees(res.data.employees);
-        console.log(res.data.employees);
+    const contractor_columns_memo = useMemo(() => contractor_columns, []);
+    const contractor_data = useMemo(() => (contractors || []), [contractors]);
 
-      })
-      .catch((err)=>
-      {
-        console.log("Failed to fetch employees: ", err.response.data.message);
-        setServerResponse("Error fetching employees");
-      })
-
-    }
-    catch(error)
-    {
-      console.log(error)
-      setServerResponse("Error fetching employees");
-
-    }
-  }
-
-  useEffect(() => {
-      fetchData(searchQuery);
-  }, [page]);
-
-  // change back to page 1 if search query changes
-  useEffect(() => {
-      setPage(1);
-      fetchData(searchQuery);
-  }, [searchQuery]);
-
-  // Pagination handlers
-  const nextPage = () => {
-      setPage(page + 1);
-  }
-
-  const prevPage = () => {
-      setPage(page - 1);
-  }
-
-  const employee_columns = [
-    {
-      Header: "First Name",
-      accessor: "firstName"
-    },
-    {
-      Header: "Last Name",
-      accessor: "lastName"
-    },
-    {
-      Header: "Email",
-      accessor: "email"
-    },
-    {
-      Header: "Role",
-      accessor: "role"
-    }
-    //may add button to view profile
-  ]
-
-  const employee_columns_memo = useMemo(() => employee_columns, []);
-  const employee_memo = useMemo(() => (employees || []), [employees]);
-
-  const employee_table = useTable({columns: employee_columns_memo, data: employee_memo});
-
-  const {getTableProps, getTableBodyProps, headerGroups, rows, prepareRow} = employee_table;
-
+    const contractor_table = useTable({columns: contractor_columns_memo, data: contractor_data});
+    const {getTableProps, getTableBodyProps, headerGroups, rows, prepareRow} = contractor_table;
 
   return (
     <div className='flex flex-row w-full overflow-hidden dark:bg-gray-800 dark:text-white'>
@@ -111,20 +109,22 @@ const AllEmployees = () => {
         <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 min-h-screen w-full overflow-y-auto">
           
           <p className="text-2xl text-gray-400 dark:text-white">
-            Employees
+            Contractors
           </p>
 
           <p className="text-gray-400 dark:text-white">
-            These are all the employees in the system database (including you).
+            These are all the contractors in the system database.
           </p>
 
+        
+            <br/>
+            <button type="button" className="text-white inline-flex items-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 gap-3" onClick={()=>nav('/settings')}>
+                <ArrowBackIcon/>
+                Back
+            </button>
+
+
           <br/>
-
-          <button type="button" className="text-white inline-flex items-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 gap-3" onClick={()=>nav('/settings')}>
-            <ArrowBackIcon/>
-            Back
-          </button>
-
           <br/>
           {
             serverResponse &&
@@ -147,7 +147,7 @@ const AllEmployees = () => {
             </div>
           </form>
           <br/>
-          {employees && employees.length > 0 ?
+          {contractors && contractors.length > 0 ?
             <>
 
               {/* Search bar */}
@@ -201,7 +201,7 @@ const AllEmployees = () => {
                 </svg>
                 Previous
               </button>
-              <button className="flex items-center justify-center px-4 h-10 text-base font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white" onClick={nextPage} disabled={employees.length < pageSize}>
+              <button className="flex items-center justify-center px-4 h-10 text-base font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white" onClick={nextPage} disabled={contractors.length < pageSize}>
                 Next
                 <svg className="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
                   <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
@@ -217,7 +217,7 @@ const AllEmployees = () => {
             </svg>
             <span className="sr-only">Info</span>
             <div>
-              <span className="font-medium">No employees found</span>
+              <span className="font-medium">No contractors found</span>
             </div>
           </div>
 
@@ -231,4 +231,4 @@ const AllEmployees = () => {
   )
 }
 
-export default AllEmployees
+export default AllContractors
