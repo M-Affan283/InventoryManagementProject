@@ -27,211 +27,6 @@ import {
   mangoFusionPalette,
   cheerfulFiestaPalette,
 } from '@mui/x-charts/colorPalettes';
-import { ContentCutOutlined } from '@mui/icons-material';
-
-/* UPDATE DATA IS NOW IN THE FORM:
-
-  {
-  "data": {
-    "weight_transaction_widget_data": {
-      "today": {
-        "incoming": 0,
-        "outgoing": 0,
-        "goods_weight": {
-          "incoming": [],
-          "outgoing": []
-        }
-      },
-      "this_week": {
-        "incoming": 4,
-        "outgoing": 2,
-        "goods_weight": {
-          "incoming": [
-            {
-              "value": 200,
-              "label": "Aluminium"
-            },
-            {
-              "value": 100,
-              "label": "Steel"
-            }
-          ],
-          "outgoing": [
-            {
-              "value": 500,
-              "label": "Aluminium"
-            },
-            {
-              "value": 1086,
-              "label": "Steel"
-            }
-          ]
-        }
-      },
-      "this_month": {
-        "incoming": 4,
-        "outgoing": 2,
-        "goods_weight": {
-          "incoming": [
-            {
-              "value": 200,
-              "label": "Aluminium"
-            },
-            {
-              "value": 100,
-              "label": "Steel"
-            }
-          ],
-          "outgoing": [
-            {
-              "value": 500,
-              "label": "Aluminium"
-            },
-            {
-              "value": 1086,
-              "label": "Steel"
-            }
-          ]
-        }
-      }
-    },
-    "internal_transaction_widget_data": {
-      "today": {
-        "goods_weight": [],
-        "work_amount": []
-      },
-      "this_week": {
-        "goods_weight": [
-          {
-            "value": 300,
-            "label": "Aluminium"
-          },
-          {
-            "value": 700,
-            "label": "Steel"
-          }
-        ],
-        "work_amount": [
-          {
-            "value": 15000,
-            "label": "Aluminium"
-          },
-          {
-            "value": 70000,
-            "label": "Steel"
-          }
-        ]
-      },
-      "this_month": {
-        "goods_weight": [
-          {
-            "value": 300,
-            "label": "Aluminium"
-          },
-          {
-            "value": 700,
-            "label": "Steel"
-          }
-        ],
-        "work_amount": [
-          {
-            "value": 15000,
-            "label": "Aluminium"
-          },
-          {
-            "value": 70000,
-            "label": "Steel"
-          }
-        ]
-      }
-    },
-    "external_transaction_widget_data": {
-      "today": {
-        "vehicle_weight": [],
-        "external_amount": []
-      },
-      "this_week": {
-        "vehicle_weight": [
-          {
-            "value": 5000,
-            "label": "WorldCall"
-          },
-          {
-            "value": 8000,
-            "label": "FAST"
-          },
-          {
-            "value": 5000,
-            "label": "Google"
-          },
-          {
-            "value": 2500,
-            "label": "Facebook"
-          }
-        ],
-        "external_amount": [
-          {
-            "value": 1650000,
-            "label": "WorldCall"
-          },
-          {
-            "value": 2000000,
-            "label": "FAST"
-          },
-          {
-            "value": 1000000,
-            "label": "Google"
-          },
-          {
-            "value": 375000,
-            "label": "Facebook"
-          }
-        ]
-      },
-      "this_month": {
-        "vehicle_weight": [
-          {
-            "value": 5000,
-            "label": "WorldCall"
-          },
-          {
-            "value": 8000,
-            "label": "FAST"
-          },
-          {
-            "value": 5000,
-            "label": "Google"
-          },
-          {
-            "value": 2500,
-            "label": "Facebook"
-          }
-        ],
-        "external_amount": [
-          {
-            "value": 1650000,
-            "label": "WorldCall"
-          },
-          {
-            "value": 2000000,
-            "label": "FAST"
-          },
-          {
-            "value": 1000000,
-            "label": "Google"
-          },
-          {
-            "value": 375000,
-            "label": "Facebook"
-          }
-        ]
-      }
-    }
-  }
-}
-
-
-*/
 
 
 const Dashboard = () => {
@@ -432,11 +227,11 @@ const Dashboard = () => {
                         <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
                           <CardContent>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
-                              Incoming Total Weight:
+                              Incoming Total Weight (kg):
                             </Typography>
                             <br/>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                              {todayIncoming ? todayIncoming.reduce((acc: number, curr: any)=> acc + curr.value, 0) : 0} kg
+                              {todayIncoming ? todayIncoming.reduce((acc: number, curr: any)=> acc + curr.value, 0).toFixed(2) : 0}
                             </Typography>
                           </CardContent>
                         </Card>
@@ -445,11 +240,11 @@ const Dashboard = () => {
                         <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
                           <CardContent>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
-                              Outgoing Total Weight:
+                              Outgoing Total Weight (kg):
                             </Typography>
                             <br/>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                              {todayOutgoing ? todayOutgoing.reduce((acc: number, curr: any)=> acc + curr.value, 0) : 0} kg
+                              {todayOutgoing ? todayOutgoing.reduce((acc: number, curr: any)=> acc + curr.value, 0).toFixed(2) : 0}
                             </Typography>
                           </CardContent>
                         </Card>
@@ -573,11 +368,11 @@ const Dashboard = () => {
                         <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
                           <CardContent>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
-                              Incoming Total Weight:
+                              Incoming Total Weight (kg):
                             </Typography>
                             <br/>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                              {thisWeekIncoming ? thisWeekIncoming.reduce((acc: number, curr: any)=> acc + curr.value, 0) : 0} kg
+                              {thisWeekIncoming ? thisWeekIncoming.reduce((acc: number, curr: any)=> acc + curr.value, 0).toFixed(2) : 0}
                             </Typography>
                           </CardContent>
                         </Card>
@@ -586,11 +381,11 @@ const Dashboard = () => {
                         <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
                           <CardContent>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
-                              Outgoing Total Weight:
+                              Outgoing Total Weight (kg):
                             </Typography>
                             <br/>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                              {thisWeekOutgoing ? thisWeekOutgoing.reduce((acc: number, curr: any)=> acc + curr.value, 0) : 0} kg
+                              {thisWeekOutgoing ? thisWeekOutgoing.reduce((acc: number, curr: any)=> acc + curr.value, 0).toFixed(2) : 0}
                             </Typography>
                           </CardContent>
                         </Card>
@@ -713,11 +508,11 @@ const Dashboard = () => {
                         <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
                           <CardContent>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
-                              Incoming Total Weight:
+                              Incoming Total Weight (kg):
                             </Typography>
                             <br/>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                              {thisMonthIncoming ? thisMonthIncoming.reduce((acc: number, curr: any)=> acc + curr.value, 0) : 0} kg
+                              {thisMonthIncoming ? thisMonthIncoming.reduce((acc: number, curr: any)=> acc + curr.value, 0).toFixed(2) : 0}
                             </Typography>
                           </CardContent>
                         </Card>
@@ -726,11 +521,11 @@ const Dashboard = () => {
                         <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
                           <CardContent>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
-                              Outgoing Total Weight:
+                              Outgoing Total Weight (kg):
                             </Typography>
                             <br/>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                              {thisMonthOutgoing ? thisMonthOutgoing.reduce((acc: number, curr: any)=> acc + curr.value, 0) : 0} kg
+                              {thisMonthOutgoing ? thisMonthOutgoing.reduce((acc: number, curr: any)=> acc + curr.value, 0).toFixed(2) : 0}
                             </Typography>
                           </CardContent>
                         </Card>
@@ -843,11 +638,11 @@ const Dashboard = () => {
                             <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
                               <CardContent>
                                 <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
-                                  Total Weight Handled:
+                                  Total Weight Handled (kg):
                                 </Typography>
                                 <br/>
                                 <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                                  {internalTransactionWidgetData.today.goods_weight.reduce((acc: number, curr: any)=> acc + curr.value, 0)} kg
+                                  {internalTransactionWidgetData.today.goods_weight.reduce((acc: number, curr: any)=> acc + curr.value, 0).toFixed(2)}
                                 </Typography>
                               </CardContent>
                             </Card>
@@ -860,7 +655,7 @@ const Dashboard = () => {
                                 </Typography>
                                 <br/>
                                 <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                                  {internalTransactionWidgetData.today.work_amount.reduce((acc: number, curr: any)=> acc + curr.value, 0)}
+                                  {internalTransactionWidgetData.today.work_amount.reduce((acc: number, curr: any)=> acc + curr.value, 0).toFixed(2)}
                                 </Typography>
                               </CardContent>
                             </Card>
@@ -957,11 +752,11 @@ const Dashboard = () => {
                         <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
                           <CardContent>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
-                              Total Weight Handled:
+                              Total Weight Handled (kg):
                             </Typography>
                             <br/>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                              {internalTransactionWidgetData.this_week.goods_weight.reduce((acc: number, curr: any)=> acc + curr.value, 0)} kg
+                              {internalTransactionWidgetData.this_week.goods_weight.reduce((acc: number, curr: any)=> acc + curr.value, 0).toFixed(2)}
                             </Typography>
                           </CardContent>
                         </Card>
@@ -974,7 +769,7 @@ const Dashboard = () => {
                             </Typography>
                             <br/>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                              {internalTransactionWidgetData.this_week.work_amount.reduce((acc: number, curr: any)=> acc + curr.value, 0)}
+                              {internalTransactionWidgetData.this_week.work_amount.reduce((acc: number, curr: any)=> acc + curr.value, 0).toFixed(2)}
                             </Typography>
                           </CardContent>
                         </Card>
@@ -1072,11 +867,11 @@ const Dashboard = () => {
                         <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
                           <CardContent>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
-                              Total Weight Handled:
+                              Total Weight Handled (kg):
                             </Typography>
                             <br/>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                              {internalTransactionWidgetData.this_month.goods_weight.reduce((acc: number, curr: any)=> acc + curr.value, 0)} kg
+                              {internalTransactionWidgetData.this_month.goods_weight.reduce((acc: number, curr: any)=> acc + curr.value, 0).toFixed(2)}
                             </Typography>
                           </CardContent>
                         </Card>
@@ -1089,7 +884,7 @@ const Dashboard = () => {
                             </Typography>
                             <br/>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                              {internalTransactionWidgetData.this_month.work_amount.reduce((acc: number, curr: any)=> acc + curr.value, 0)} 
+                              {internalTransactionWidgetData.this_month.work_amount.reduce((acc: number, curr: any)=> acc + curr.value, 0).toFixed(2)} 
                             </Typography>
                           </CardContent>
                         </Card>
@@ -1208,11 +1003,11 @@ const Dashboard = () => {
                             <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
                               <CardContent>
                                 <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
-                                  Total Vehicle Weight Handled:
+                                  Total Vehicle Weight Handled (kg):
                                 </Typography>
                                 <br/>
                                 <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                                  {externalTransactionWidgetData.today.vehicle_weight.reduce((acc: number, curr: any)=> acc + curr.value, 0)} kg
+                                  {externalTransactionWidgetData.today.vehicle_weight.reduce((acc: number, curr: any)=> acc + curr.value, 0).toFixed(2)}
                                 </Typography>
                               </CardContent>
                             </Card>
@@ -1225,7 +1020,7 @@ const Dashboard = () => {
                                 </Typography>
                                 <br/>
                                 <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                                  {externalTransactionWidgetData.today.external_amount.reduce((acc: number, curr: any)=> acc + curr.value, 0)} 
+                                  {externalTransactionWidgetData.today.external_amount.reduce((acc: number, curr: any)=> acc + curr.value, 0).toFixed(2)} 
                                 </Typography>
                               </CardContent>
                             </Card>
@@ -1322,11 +1117,11 @@ const Dashboard = () => {
                         <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
                           <CardContent>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
-                              Total Vehicle Weight Handled:
+                              Total Vehicle Weight Handled (kg):
                             </Typography>
                             <br/>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                              {externalTransactionWidgetData.this_week.vehicle_weight.reduce((acc: number, curr: any)=> acc + curr.value, 0)} kg
+                              {externalTransactionWidgetData.this_week.vehicle_weight.reduce((acc: number, curr: any)=> acc + curr.value, 0).toFixed(2)}
                             </Typography>
                           </CardContent>
                         </Card>
@@ -1339,7 +1134,7 @@ const Dashboard = () => {
                             </Typography>
                             <br/>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                              {externalTransactionWidgetData.this_week.external_amount.reduce((acc: number, curr: any)=> acc + curr.value, 0)} 
+                              {externalTransactionWidgetData.this_week.external_amount.reduce((acc: number, curr: any)=> acc + curr.value, 0).toFixed(2)} 
                             </Typography>
                           </CardContent>
                         </Card>
@@ -1436,11 +1231,11 @@ const Dashboard = () => {
                         <Card variant='outlined' sx={{ backgroundColor: '#374151', borderRadius: '15px', color: 'white', width: 250, height: 150 }}>
                           <CardContent>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize:'1.1rem' }}>
-                              Total Vehicle Weight Handled:
+                              Total Vehicle Weight Handled (kg):
                             </Typography>
                             <br/>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                              {externalTransactionWidgetData.this_month.vehicle_weight.reduce((acc: number, curr: any)=> acc + curr.value, 0)} kg
+                              {externalTransactionWidgetData.this_month.vehicle_weight.reduce((acc: number, curr: any)=> acc + curr.value, 0).toFixed(2)}
                             </Typography>
                           </CardContent>
                         </Card>
@@ -1453,7 +1248,7 @@ const Dashboard = () => {
                             </Typography>
                             <br/>
                             <Typography variant="h5" component="h2" sx={{ textAlign: 'center', fontSize: '3rem' }}>
-                              {externalTransactionWidgetData.this_month.external_amount.reduce((acc: number, curr: any)=> acc + curr.value, 0)} 
+                              {externalTransactionWidgetData.this_month.external_amount.reduce((acc: number, curr: any)=> acc + curr.value, 0).toFixed(2)} 
                             </Typography>
                           </CardContent>
                         </Card>

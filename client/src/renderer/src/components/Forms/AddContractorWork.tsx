@@ -10,6 +10,7 @@ const AddContractorWork = (props:any) => {
     // const [emptyWeight, setemptyWeight] = useState<string>();
     // const [filledWeight, setfilledWeight] = useState<string>();
     const [goodWeight, setGoodWeight] = useState<string>();
+    const [garbageWeight, setGarbageWeight] = useState<string>();
     const [weightReading, setWeightReading] = useState<string>("0"); 
     const [workAmountReading, setWorkAmountReading] = useState<string>("0"); //this will be calculated by multiplying weight with rate of goods [good_rate] displayed along with weight reading
     const [reading, setReading] = useState<boolean>(false);
@@ -37,6 +38,7 @@ const AddContractorWork = (props:any) => {
         setGoodWeight("0");
         setWeightReading("0");
         setWorkAmountReading("0");
+        setGarbageWeight("0");  
         // setServerResponse(null);
         setGoodsTypeDropdownValue({good_name: "Goods Type", good_code:'0'});
     }
@@ -50,11 +52,11 @@ const AddContractorWork = (props:any) => {
     const formSubmit = (e:any) =>
     {
         e.preventDefault();
-        console.log(`Details: ${contractorCode}, ${goodsTypeDropdownValue}, ${goodWeight}`)
+        console.log(`Details: ${contractorCode}, ${goodsTypeDropdownValue}, ${goodWeight}, ${garbageWeight}`)
         
         try
         {
-            axios.post(`${apiUrl}/goods/addContractorWork`, {contractor_code: contractorCode, goods_code: goodsTypeDropdownValue.good_code, goods_weight: goodWeight, employee: user?.email})
+            axios.post(`${apiUrl}/goods/addContractorWork`, {contractor_code: contractorCode, goods_code: goodsTypeDropdownValue.good_code, goods_weight: goodWeight, garbage_weight: garbageWeight, employee: user?.email})
             .then((res)=>
             {
                 console.log("Contractor work added");
@@ -169,6 +171,12 @@ const AddContractorWork = (props:any) => {
                     <div className="relative z-0 w-full mb-5 group flex flex-col"> {/* Change flex direction to column */}
                         <input type="number" name="empty_weight" id="floating_first_name" className="block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="0" value={goodWeight} required onChange={(e)=>{setGoodWeight(e.target.value);}} />
                         <label className="peer-focus:font-medium absolute text-lg text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Good Weight</label>
+                        {/* button here to read weight */}
+                        { !reading ? <button type="button" className="text-lg text-blue-500 dark:text-blue-400 self-end mt-1" onClick={()=>{readWeightFilled()}}>Read</button> : <button type="button" className="text-sm text-red-500 dark:text-red-400 self-end mt-1" onClick={()=>{stopReadingFilled()}}>Stop</button>}
+                    </div>
+                    <div className="relative z-0 w-full mb-5 group flex flex-col"> {/* Change flex direction to column */}
+                        <input type="number" name="empty_weight" id="floating_first_name" className="block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="0" value={garbageWeight} onChange={(e)=>{setGarbageWeight(e.target.value);}} />
+                        <label className="peer-focus:font-medium absolute text-lg text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Garbage Weight</label>
                         {/* button here to read weight */}
                         { !reading ? <button type="button" className="text-lg text-blue-500 dark:text-blue-400 self-end mt-1" onClick={()=>{readWeightFilled()}}>Read</button> : <button type="button" className="text-sm text-red-500 dark:text-red-400 self-end mt-1" onClick={()=>{stopReadingFilled()}}>Stop</button>}
                     </div>

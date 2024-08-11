@@ -1,114 +1,231 @@
 //Contains all functions related to handling goods such as weighing them and storing them etc in the database
-import { User, WeighingTransactions, Notifications, Contractor, ContractorWork, GoodsType,ExternalTransactions, ExternalRate } from "../models/schema.js";
+import { User, WeighingTransactions, OutgoingWeighingTransactions, Contractor, ContractorWork, GoodsType,ExternalTransactions, Vendor } from "../models/schema.js";
 
 //add update funcition for all transactions, contractor work and external transactions
 //add weight adjustment update to all relevant functions and also special function to update weight adjustment
 
 
-//ADD IN/OUT RECORD PART
+//ADD IN RECORD PART
 export const addWeighingTransaction = async (req,res) =>
 {
-    const {type, truck_no, driver_name, driver_contact, good_code, empty_weight, filled_weight, goods_weight, employee} = req.body;
-    console.log("Add weighing transaction request for time: ", Date.now());
-    console.log(`details: ${type}, ${truck_no}, ${driver_name}, ${driver_contact}, ${good_code}, ${empty_weight}, ${filled_weight}, ${goods_weight}, ${employee}`)
+    const {type} = req.body;
 
-    try
+    if(type === "incoming")
     {
-        const user_present = await User.findOne({email: employee});
-        if(!user_present)
+        const {truck_no, driver_name, driver_contact, vendor_name, good_code, empty_weight, filled_weight, goods_weight, employee} = req.body;
+        console.log("Add incoming weighing transaction request for time: ", Date.now());
+        console.log(`details: ${type}, ${truck_no}, ${driver_name}, ${driver_contact}, ${good_code}, ${empty_weight}, ${filled_weight}, ${goods_weight}, ${employee}`)
+        try
         {
-            return res.status(400).json({message: "Employee not found"});
+            const user_present = await User.findOne({email: employee});
+            if(!user_present)
+            {
+                return res.status(400).json({message: "Employee not found"});
+            }
+    
+            const goods_type = await GoodsType.findOne({good_code: good_code});
+            if(!goods_type)
+            {
+                return res.status(400).json({message: "Goods type not found"});
+            }
+    
+            const vendor = await Vendor.findOne({vendor_name: vendor_name});
+            if(!vendor)
+            {
+                return res.status(400).json({message: "Vendor not found"});
+            }
+    
+            //parse all float values to float
+            const empty_weight_float = parseFloat(empty_weight).toFixed(2);
+            const filled_weight_float = parseFloat(filled_weight).toFixed(2);
+            const goods_weight_float = parseFloat(goods_weight).toFixed(2);
+            // const weight_adjust_float = parseFloat(weight_adjust).toFixed(2);
+    
+            //if truck has been filled
+            if(goods_weight > 0)
+            {
+    
+                console.log("Truck has been filled");
+    
+                //add filled weight, empty weight, goods weight, weight adjust, date empty weight, employee to the weighing transaction
+                await WeighingTransactions.create({
+                    type: type,
+                    truck_no: truck_no,
+                    driver_name: driver_name,
+                    driver_contact: driver_contact,
+                    vendor: vendor._id,
+                    goods_type_id: goods_type._id,
+                    empty_weight: empty_weight_float,
+                    filled_weight: filled_weight_float,
+                    goods_weight: goods_weight_float,
+                    date_empty_weight: new Date(),
+                    date_filled_weight: new Date(),
+                    employee: user_present._id
+                })
+            }
+            else
+            {
+    
+                console.log("Truck has not been filled");
+    
+                //goods weight is 0 which means truck filles weight will be added later
+                await WeighingTransactions.create({
+                    type: type,
+                    truck_no: truck_no,
+                    driver_name: driver_name,
+                    driver_contact: driver_contact,
+                    vendor: vendor._id,
+                    goods_type_id: goods_type._id,
+                    empty_weight: empty_weight,
+                    filled_weight: filled_weight,
+                    goods_weight: goods_weight,
+                    date_empty_weight: new Date(),
+                    is_deleted: false,
+                    employee: user_present._id
+                });
+    
+            }
+    
+            return res.status(200).json({message: "Weighing transaction added successfully"});
+    
         }
-
-        const goods_type = await GoodsType.findOne({good_code: good_code});
-        if(!goods_type)
+        catch(error)
         {
-            return res.status(400).json({message: "Goods type not found"});
+            console.log("Error: ", error);
+            return res.status(500).json({message: "Internal server error"});
         }
-
-        //parse all float values to float
-        const empty_weight_float = parseFloat(empty_weight).toFixed(2);
-        const filled_weight_float = parseFloat(filled_weight).toFixed(2);
-        const goods_weight_float = parseFloat(goods_weight).toFixed(2);
-        // const weight_adjust_float = parseFloat(weight_adjust).toFixed(2);
-
-        //if truck has been filled
-        if(goods_weight > 0)
-        {
-
-            console.log("Truck has been filled");
-
-            //add filled weight, empty weight, goods weight, weight adjust, date empty weight, employee to the weighing transaction
-            await WeighingTransactions.create({
-                type: type,
-                truck_no: truck_no,
-                driver_name: driver_name,
-                driver_contact: driver_contact,
-                goods_type_id: goods_type._id,
-                empty_weight: empty_weight_float,
-                filled_weight: filled_weight_float,
-                goods_weight: goods_weight_float,
-                date_empty_weight: new Date(),
-                date_filled_weight: new Date(),
-                employee: user_present._id
-            })
-        }
-        else
-        {
-
-            console.log("Truck has not been filled");
-
-            //goods weight is 0 which means truck filles weight will be added later
-            await WeighingTransactions.create({
-                type: type,
-                truck_no: truck_no,
-                driver_name: driver_name,
-                driver_contact: driver_contact,
-                goods_type_id: goods_type._id,
-                empty_weight: empty_weight,
-                filled_weight: filled_weight,
-                goods_weight: goods_weight,
-                date_empty_weight: new Date(),
-                is_deleted: false,
-                employee: user_present._id
-            });
-
-        }
-
-        return res.status(200).json({message: "Weighing transaction added successfully"});
-
     }
-    catch(error)
+    else if(type === "outgoing")
     {
-        console.log("Error: ", error);
-        return res.status(500).json({message: "Internal server error"});
+        const {truck_no, driver_name, driver_contact, vendor_name, good_code, truck_weight, container_weight, goods_weight, employee} = req.body;
+        console.log("Add outgoing weighing transaction request for time: ", Date.now());
+        console.log(`details: ${type}, ${truck_no}, ${driver_name}, ${driver_contact}, ${good_code}, ${truck_weight}, ${container_weight}, ${goods_weight}, ${employee}`)
+        try
+        {
+            const user_present = await User.findOne({email: employee});
+            if(!user_present)
+            {
+                return res.status(400).json({message: "Employee not found"});
+            }
+    
+            const goods_type = await GoodsType.findOne({good_code: good_code});
+            if(!goods_type)
+            {
+                return res.status(400).json({message: "Goods type not found"});
+            }
+    
+            const vendor = await Vendor.findOne({vendor_name: vendor_name});
+            if(!vendor)
+            {
+                return res.status(400).json({message: "Vendor not found"});
+            }
+
+            //parse all float values to float
+            const truck_weight_float = parseFloat(truck_weight).toFixed(2);
+            const container_weight_float = parseFloat(container_weight).toFixed(2);
+            const goods_weight_float = parseFloat(goods_weight).toFixed(2);
+
+            //if truck has been filled
+            if(goods_weight > 0)
+            {
+    
+                console.log("Truck has been filled");
+    
+                //add filled weight, empty weight, goods weight, weight adjust, date empty weight, employee to the weighing transaction
+                await OutgoingWeighingTransactions.create({
+                    type: type,
+                    truck_no: truck_no,
+                    driver_name: driver_name,
+                    driver_contact: driver_contact,
+                    vendor: vendor._id,
+                    goods_type_id: goods_type._id,
+                    truck_weight: truck_weight_float,
+                    container_weight: container_weight_float,
+                    goods_weight: goods_weight_float,
+                    date_empty_weight: new Date(),
+                    date_filled_weight: new Date(),
+                    employee: user_present._id
+                })
+            }
+            else
+            {
+                console.log("Truck has not been filled");
+                
+                //goods weight is 0 which means truck filles weight will be added later
+                await OutgoingWeighingTransactions.create({
+                    type: type,
+                    truck_no: truck_no,
+                    driver_name: driver_name,
+                    driver_contact: driver_contact,
+                    vendor: vendor._id,
+                    goods_type_id: goods_type._id,
+                    truck_weight: truck_weight_float,
+                    container_weight: container_weight_float,
+                    goods_weight: goods_weight_float,
+                    date_empty_weight: new Date(),
+                    is_deleted: false,
+                    employee: user_present._id
+                });
+            }
+
+            return res.status(200).json({message: "Weighing transaction added successfully"});
+
+
+        }
+        catch(error)
+        {
+            console.log("Error: ", error);
+            return res.status(500).json({message: "Internal server error"});
+        }
     }
+
 }
 
 export const updateWeighingTransaction = async (req,res) =>
 {
-    const {transaction_id, empty_weight, filled_weight, goods_weight} = req.body;
+    const {transaction_id} = req.body;
     console.log("Update weighing transaction request");
 
     try
     {
-        const transaction = await WeighingTransactions.findOne({_id: transaction_id});
+        const transaction = await WeighingTransactions.findOne({_id: transaction_id}) || await OutgoingWeighingTransactions.findOne({_id: transaction_id});
         if(!transaction)
         {
             return res.status(400).json({message: "Transaction not found"});
         }
 
-        //parse all float values to float
-        const empty_weight_float = parseFloat(empty_weight).toFixed(2);
-        const filled_weight_float = parseFloat(filled_weight).toFixed(2);
-        const goods_weight_float = parseFloat(goods_weight).toFixed(2);
+        if(transaction.type === "incoming")
+        {
+            const {empty_weight, filled_weight, goods_weight} = req.body;
 
-        //update the transaction
-        transaction.empty_weight = empty_weight_float;
-        transaction.filled_weight = filled_weight_float;
-        transaction.goods_weight = goods_weight_float;
-        transaction.date_filled_weight = new Date();
-        await transaction.save();
+            const empty_weight_float = parseFloat(empty_weight).toFixed(2);
+            const filled_weight_float = parseFloat(filled_weight).toFixed(2);
+            const goods_weight_float = parseFloat(goods_weight).toFixed(2);
+    
+            //update the transaction
+            transaction.empty_weight = empty_weight_float;
+            transaction.filled_weight = filled_weight_float;
+            transaction.goods_weight = goods_weight_float;
+            transaction.date_filled_weight = new Date();
+            await transaction.save();
+        }
+        else if(transaction.type === "outgoing")
+        {
+            const {truck_weight, container_weight, goods_weight} = req.body;
+
+            const truck_weight_float = parseFloat(truck_weight).toFixed(2);
+            const container_weight_float = parseFloat(container_weight).toFixed(2);
+            const goods_weight_float = parseFloat(goods_weight).toFixed(2);
+
+            //update the transaction
+            transaction.truck_weight = truck_weight_float;
+            transaction.container_weight = container_weight_float;
+            transaction.goods_weight = goods_weight_float;
+            transaction.date_filled_weight = new Date();
+            await transaction.save();
+        }
+
+        //parse all float values to float
 
         //maybe add notification for the employee that container has been updated after update later
 
@@ -138,7 +255,7 @@ export const deleteWeighingTransaction = async (req,res) =>
         }
 
         //find the transaction
-        const transaction = await WeighingTransactions.findOne({_id: transaction_id}).populate("employee");
+        const transaction = await WeighingTransactions.findOne({_id: transaction_id}).populate("employee") || await OutgoingWeighingTransactions.findOne({_id: transaction_id}).populate("employee");
 
         if(!transaction)
         {
@@ -151,16 +268,16 @@ export const deleteWeighingTransaction = async (req,res) =>
         }
 
         //get employee notificaiton
-        const employee_notifications = await Notifications.findOne({user_id: transaction.employee.email});
-        const admin = await User.findOne({role: "admin"});
+        // const employee_notifications = await Notifications.findOne({user_id: transaction.employee.email});
+        // const admin = await User.findOne({role: "admin"});
     
-        const admin_notifications = await Notifications.findOne({user: admin.email});
+        // const admin_notifications = await Notifications.findOne({user: admin.email});
 
-        //add notification for the employee that container has been deleted after deletion
-        let notif_data = {notifType:"transaction_deleted", data: `Truck with transactions id ${transaction_id} has been marked as deleted`, time: new Date()};
-        // console.log(employee_notifications)
-        employee_notifications.notifications.push(notif_data);
-        admin_notifications.notifications.push(notif_data);
+        // //add notification for the employee that container has been deleted after deletion
+        // let notif_data = {notifType:"transaction_deleted", data: `Truck with transactions id ${transaction_id} has been marked as deleted`, time: new Date()};
+        // // console.log(employee_notifications)
+        // employee_notifications.notifications.push(notif_data);
+        // admin_notifications.notifications.push(notif_data);
 
         //update the transaction
         transaction.is_deleted = true;
@@ -168,8 +285,8 @@ export const deleteWeighingTransaction = async (req,res) =>
         transaction.delete_by = employee_present._id;
         transaction.delete_reason = delete_reason;
         await transaction.save();
-        await employee_notifications.save();
-        await admin_notifications.save();
+        // await employee_notifications.save();
+        // await admin_notifications.save();
 
         return res.status(200).json({message: "Transaction deleted successfully"});
 
@@ -185,7 +302,7 @@ export const deleteWeighingTransaction = async (req,res) =>
 export const getWeighingTransactions = async (req,res) =>
 {
     const {email, searchQuery="", page=1, limit=10} = req.query;
-    console.log("Get containers request for:" , email);
+    console.log("Get incoming containers request for:" , email);
 
     try
     {
@@ -231,7 +348,7 @@ export const getWeighingTransactions = async (req,res) =>
                 };
             }
 
-            const transactions = await WeighingTransactions.find(searchFilter).skip(skip).limit(limitNumber).populate("goods_type_id").populate("employee")
+            const transactions = await WeighingTransactions.find(searchFilter).skip(skip).limit(limitNumber).populate("goods_type_id").populate("employee").populate("vendor")
 
             return res.status(200).json({transactions: transactions});
         }
@@ -254,7 +371,7 @@ export const getWeighingTransactions = async (req,res) =>
 
             } : { employee: user._id };
 
-            const transactions = await WeighingTransactions.find(searchFilter).skip(skip).limit(limitNumber).populate("goods_type_id")
+            const transactions = await WeighingTransactions.find(searchFilter).skip(skip).limit(limitNumber).populate("goods_type_id").populate("employee").populate("vendor")
             return res.status(200).json({transactions: transactions});
         }
     }
@@ -265,6 +382,93 @@ export const getWeighingTransactions = async (req,res) =>
     }
 }
 
+//same as above but for outgoing transactions so different regex
+export const getOutgoingWeighingTransactions = async (req,res) =>
+{
+    const {email, searchQuery="", page=1, limit=10} = req.query;
+    console.log("Get incoming containers request for:" , email);
+
+    try
+    {
+        console.log("Query: ", req.query);
+
+        const user = await User.findOne({email: email});
+        
+        const pageNumber = parseInt(page, 10);
+        const limitNumber = parseInt(limit, 10);
+        
+        const skip = (pageNumber - 1) * limitNumber;
+
+        if(user.role === "admin")
+        {
+            //get all transactions
+            //first check if search query contains an emplouyee name only
+            console.log("Get containers admin request");
+            let searchFilter = {};
+
+            if (searchQuery) {
+                const userSearchFilter = {
+                    $or: [
+                        { firstName: { $regex: searchQuery, $options: 'i' } },
+                        { lastName: { $regex: searchQuery, $options: 'i' } }
+                    ]
+                };
+
+                const users = await User.find(userSearchFilter);
+                const userIds = users.map(user => user._id);
+
+                searchFilter = {
+                    $or: [
+                        { type: { $regex: searchQuery, $options: 'i' } },
+                        { truck_no: { $regex: searchQuery, $options: 'i' } },
+                        { driver_name: { $regex: searchQuery, $options: 'i' } },
+                        { driver_contact: { $regex: searchQuery, $options: 'i' } },
+                        { employee: { $in: userIds } },
+                        ...(isNaN(parseFloat(searchQuery)) ? [] : [
+                            { truck_weight: parseFloat(searchQuery) },
+                            { container_weight: parseFloat(searchQuery) },
+                            { goods_weight: parseFloat(searchQuery) }
+                        ])
+                    ]
+                };
+            }
+
+            const transactions = await OutgoingWeighingTransactions.find(searchFilter).skip(skip).limit(limitNumber).populate("goods_type_id").populate("employee").populate("vendor")
+
+            return res.status(200).json({transactions: transactions});
+        }
+        else
+        {
+            console.log("Get containers employee request");
+            //no need for the userid garbage just get only employee transactions
+            let searchFilter = searchQuery ? {
+                $or: [
+                    { type: { $regex: searchQuery, $options: 'i' } },
+                    { truck_no: { $regex: searchQuery, $options: 'i' } },
+                    { driver_name: { $regex: searchQuery, $options: 'i' } },
+                    { driver_contact: { $regex: searchQuery, $options: 'i' } },
+                    ...(isNaN(parseFloat(searchQuery)) ? [] : [
+                        { truck_weight: parseFloat(searchQuery) },
+                        { container_weight: parseFloat(searchQuery) },
+                        { goods_weight: parseFloat(searchQuery) }
+                    ])
+                ],
+                employee: user._id
+
+            } : { employee: user._id };
+
+            const transactions = await OutgoingWeighingTransactions.find(searchFilter).skip(skip).limit(limitNumber).populate("goods_type_id").populate("vendor")
+            return res.status(200).json({transactions: transactions});
+        }
+    }
+    catch(error)
+    {
+        console.log("Error: ", error);
+        return res.status(500).json({message: "Internal server error"});
+    }
+
+}
+
 export const getIndividualWeighingTransaction = async (req,res) =>
 {
     const {transaction_id} = req.query;
@@ -272,7 +476,7 @@ export const getIndividualWeighingTransaction = async (req,res) =>
 
     try
     {
-        const transaction = await WeighingTransactions.findOne({_id: transaction_id}).populate("goods_type_id").populate("employee");
+        const transaction = await WeighingTransactions.findOne({_id: transaction_id}).populate("goods_type_id").populate("employee").populate("vendor") || await OutgoingWeighingTransactions.findOne({_id: transaction_id}).populate("goods_type_id").populate("employee").populate("vendor");
         if(!transaction)
         {
             return res.status(400).json({message: "Transaction not found"});
@@ -361,7 +565,7 @@ export const updateWeightAdjustment = async (req,res) =>
 
 export const addContractorWork = async (req,res) =>
 {
-    const {contractor_code, goods_code, goods_weight, employee} = req.body;
+    const {contractor_code, goods_code, goods_weight, garbage_weight, employee} = req.body;
     console.log("Add contractor work request");
 
     try
@@ -394,6 +598,7 @@ export const addContractorWork = async (req,res) =>
             contractor_id: contractor._id,
             goods_type_id: goods_type_present._id,
             goods_weight: goods_weight_float,
+            garbage_weight: garbage_weight || 0, //garbage weight is optional and might be null
             goods_rate: goods_type_present.good_rate,
             work_amount: goods_weight_float * goods_type_present.good_rate,
             date_created: new Date(),
@@ -603,7 +808,7 @@ export const getIndividualContractorWork = async (req,res) =>
 
     try
     {
-        const work = await ContractorWork.findOne({_id: work_id}).populate("goods_type_id").populate("contractor_id");
+        const work = await ContractorWork.findOne({_id: work_id}).populate("goods_type_id").populate("contractor_id").populate("created_by").populate("updated_by");
         if(!work)
         {
             return res.status(400).json({message: "Work not found"});
@@ -816,7 +1021,7 @@ export const getIndividualExternalTransaction = async (req,res) =>
 
     try
     {
-        const transaction = await ExternalTransactions.findOne({_id: transaction_id});
+        const transaction = await ExternalTransactions.findOne({_id: transaction_id}).populate("created_by");
         if(!transaction)
         {
             return res.status(400).json({message: "Transaction not found"});
@@ -1004,6 +1209,7 @@ export const widgetData = async (req,res) =>
 
         //get all non deleted transactions
         const weight_transactions = await WeighingTransactions.find({is_deleted: false}).populate("goods_type_id").populate("employee");
+        const outgoing_weight_transactions = await OutgoingWeighingTransactions.find({is_deleted: false}).populate("goods_type_id").populate("employee");
         const internal_transactions = await ContractorWork.find({is_deleted: false}).populate("goods_type_id").populate("contractor_id").populate("created_by");
         const external_transactions = await ExternalTransactions.find({is_deleted: false}).populate("created_by");
         
@@ -1013,7 +1219,7 @@ export const widgetData = async (req,res) =>
         //get all good types since we will seperate according to good type
         const goods_types = await GoodsType.find({});
 
-        let return_data = calculateWidgetData(weight_transactions, internal_transactions, external_transactions, goods_types);
+        let return_data = calculateWidgetData(weight_transactions, outgoing_weight_transactions, internal_transactions, external_transactions, goods_types);
 
         return res.status(200).json({data: return_data});
 
@@ -1027,11 +1233,11 @@ export const widgetData = async (req,res) =>
 }
 
 
-const calculateWidgetData = (weight_transactions, internal_transactions, external_transactions, goods_types) =>
+const calculateWidgetData = (weight_transactions, outgoing_weight_transactions,internal_transactions, external_transactions, goods_types) =>
 {
 
     //weight_trnsactions
-    const weight_transaction_widget_data = calculateWeightTransactionWidgetData(weight_transactions, goods_types);
+    const weight_transaction_widget_data = calculateWeightTransactionWidgetData(weight_transactions, outgoing_weight_transactions, goods_types);
 
     //internal_transactions
     const internal_transaction_widget_data = calculateInternalTransactionWidgetData(internal_transactions, goods_types);
@@ -1264,7 +1470,7 @@ const calculateInternalTransactionWidgetData = (transactions, goods_types) =>
 }
 
 
-const calculateWeightTransactionWidgetData = (transactions, goods_types) =>
+const calculateWeightTransactionWidgetData = (transactions, outgoing_transactions, goods_types) =>
 {
 
     //today
@@ -1273,8 +1479,9 @@ const calculateWeightTransactionWidgetData = (transactions, goods_types) =>
     const today_end = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
 
     const today_transactions = transactions.filter(transaction => transaction.date_empty_weight >= today_start && transaction.date_empty_weight <= today_end);
+    const today_outgoing_transactions = outgoing_transactions.filter(transaction => transaction.date_empty_weight >= today_start && transaction.date_empty_weight <= today_end);
     const today_incoming_goods = today_transactions.filter(transaction => transaction.type === "incoming");
-    const today_outgoing_goods = today_transactions.filter(transaction => transaction.type === "outgoing");
+    const today_outgoing_goods = today_outgoing_transactions.filter(transaction => transaction.type === "outgoing");
 
 
     // Initialize today_goods_weight with incoming and outgoing as arrays
@@ -1321,8 +1528,9 @@ const calculateWeightTransactionWidgetData = (transactions, goods_types) =>
     const this_week_end = new Date(this_week.getFullYear(), this_week.getMonth(), this_week.getDate() + (6 - this_week.getDay()), 23, 59, 59);
 
     const this_week_transactions = transactions.filter(transaction => transaction.date_empty_weight >= this_week_start && transaction.date_empty_weight <= this_week_end);
+    const this_week_outgoing_transactions = outgoing_transactions.filter(transaction => transaction.date_empty_weight >= this_week_start && transaction.date_empty_weight <= this_week_end);
     const this_week_incoming_goods = this_week_transactions.filter(transaction => transaction.type === "incoming");
-    const this_week_outgoing_goods = this_week_transactions.filter(transaction => transaction.type === "outgoing");
+    const this_week_outgoing_goods = this_week_outgoing_transactions.filter(transaction => transaction.type === "outgoing");
 
     //same things as today
     let this_week_goods_weight = {
@@ -1359,8 +1567,9 @@ const calculateWeightTransactionWidgetData = (transactions, goods_types) =>
     const this_month_end = new Date(this_month.getFullYear(), this_month.getMonth() + 1, 0, 23, 59, 59);
 
     const this_month_transactions = transactions.filter(transaction => transaction.date_empty_weight >= this_month_start && transaction.date_empty_weight <= this_month_end);
+    const this_month_outgoing_transactions = outgoing_transactions.filter(transaction => transaction.date_empty_weight >= this_month_start && transaction.date_empty_weight <= this_month_end);
     const this_month_incoming_goods = this_month_transactions.filter(transaction => transaction.type === "incoming");
-    const this_month_outgoing_goods = this_month_transactions.filter(transaction => transaction.type === "outgoing");
+    const this_month_outgoing_goods = this_month_outgoing_transactions.filter(transaction => transaction.type === "outgoing");
 
     //same things as today
     let this_month_goods_weight = {

@@ -9,6 +9,7 @@ import ChangeCOMPort from './Forms/ChangeCOMPort';
 import ChangeBaudRate from './Forms/ChangeBaudRate';
 import AddGoodType from './Forms/AddGoodType';
 import AddContractor from './Forms/AddContractor';
+import AddVendor from './Forms/AddVendor';
 
 const Settings = (props:any) => {
 
@@ -23,7 +24,8 @@ const Settings = (props:any) => {
     {name: "change baud rate", component: <ChangeBaudRate desktopApp={props.desktopApp} />, role: "admin"},
     {name: "create user", component: <CreateUser/>, role: "admin"},
     {name: "add good type", component: <AddGoodType/>, role: "admin"},
-    {name: "add contractor", component: <AddContractor/>, role: "admin"}
+    {name: "add contractor", component: <AddContractor/>, role: "admin"},
+    {name: "add vendor", component: <AddVendor/>, role: "admin"}
   ]
 
   //filter forms based on user role

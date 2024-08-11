@@ -1,5 +1,5 @@
 //Handle all user related routes e.g. login, signup, etc
-import { User,Notifications, GoodsType, Contractor, ContractorWork } from "../models/schema.js";
+import { User,Notifications, GoodsType, Contractor, ContractorWork, Vendor } from "../models/schema.js";
 import bcrypt from "bcryptjs";
 
 export const login = async (req,res) => 
@@ -20,20 +20,20 @@ export const login = async (req,res) =>
             {
 
                 //get employee's notifications and delete all which are older than 7 days
-                console.log("Successful login. Going through notifications to delete old ones.")
-                const employee_notifications = await Notifications.findOne({user: user_present.email});
+                console.log("Successful login.")
+                // const employee_notifications = await Notifications.findOne({user: user_present.email});
 
-                const current_time = new Date();
-                const seven_days = 7 * 24 * 60 * 60 * 1000;
+                // const current_time = new Date();
+                // const seven_days = 7 * 24 * 60 * 60 * 1000;
 
-                //employee notifications time obkect from data base is in this format: 2024-06-30T15:04:26.755+00:00
-                employee_notifications.notifications = employee_notifications.notifications.filter((notif) =>
-                {
-                    const notif_time = new Date(notif.time);
-                    return (current_time - notif_time) < seven_days;
-                });
+                // //employee notifications time obkect from data base is in this format: 2024-06-30T15:04:26.755+00:00
+                // employee_notifications.notifications = employee_notifications.notifications.filter((notif) =>
+                // {
+                //     const notif_time = new Date(notif.time);
+                //     return (current_time - notif_time) < seven_days;
+                // });
 
-                await employee_notifications.save();
+                // await employee_notifications.save();
 
                 //get all goods types
                 let goods_types = await GoodsType.find({});
@@ -481,3 +481,111 @@ export const getAllContractors = async (req,res) =>
         return res.status(500).json({message: "Internal server error"});
     }
 }   
+
+
+export const addVendor = async (req,res) =>
+{
+    const {vendor_name, vendor_contact, vendor_poc, created_by} = req.body;
+
+    console.log("Add vendor request");
+
+    try
+    {
+        const user_present = await User.findOne({email: created_by});
+        if(!user_present)
+        {
+            return res.status(400).json({message: "Employee not found"});
+        }
+
+        await Vendor.create({
+            // vendor_code: vendor_code,
+            vendor_name: vendor_name,
+            vendor_contact: vendor_contact,
+            vendor_poc: vendor_poc,
+            date_created: new Date(),
+            created_by: user_present._id,
+            // date_updated: new Date()
+        });
+
+        return res.status(200).json({message: "Vendor added successfully"});
+    }
+    catch(error)
+    {
+        console.log("Error: ", error);
+        return res.status(500).json({message: "Internal server error"});
+    }
+}
+
+export const deleteVendor = async (req,res) =>
+{
+    const {vendor_code, delete_reason, employee} = req.body;
+    console.log("Delete vendor request");
+
+    try
+    {
+        const vendor = await Vendor.findOne({vendor_code: vendor_code});
+
+        if(!vendor)
+        {
+            return res.status(400).json({message: "Vendor not found"});
+        }
+
+        if(vendor.is_deleted)
+        {
+            return res.status(400).json({message: "Vendor already deleted"});
+        }
+
+        const user_present = await User.findOne({email: employee});
+
+        if(!user_present)
+        {
+            return res.status(400).json({message: "Employee not found"});
+        }
+
+        vendor.is_deleted = true;
+        vendor.date_deleted = new Date();
+        vendor.delete_by = user_present._id;
+        vendor.delete_reason = delete_reason;
+        await vendor.save();
+
+        return res.status(200).json({message: "Vendor deleted successfully"});
+    }
+    catch(error)
+    {
+        console.log("Error: ", error);
+        return res.status(500).json({message: "Internal server error"});
+    }
+}
+
+export const getAllVendors = async (req,res) =>
+{
+    console.log("Get all vendors request");
+
+    try
+    {
+        console.log("Req: ", req.query);
+        const {searchQuery="", page=1, limit=10} = req.query;
+
+        const searchFilter = searchQuery ? {
+            $or: [
+                {vendor_name: {$regex: searchQuery, $options: "i"}},
+                {vendor_contact: {$regex: searchQuery, $options: "i"}},
+                {vendor_poc: {$regex: searchQuery, $options: "i"}}
+            ]
+        } : {};
+
+        const pageNumber = parseInt(page);
+        const limitNumber = parseInt(limit);
+
+        const skip = (pageNumber - 1) * limitNumber;
+
+        const vendors = await Vendor.find(searchFilter).limit(limitNumber).skip(skip);
+
+        return res.status(200).json({ vendors: vendors });
+    }
+    catch(error)
+    {
+        console.log("Error: ", error);
+        return res.status(500).json({message: "Internal server error"});
+    }
+}

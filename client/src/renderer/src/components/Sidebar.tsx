@@ -85,7 +85,13 @@ const CustomSidebar = () => {
                         <Sidebar.Collapse icon={FaWeightScale} label="Weighing" className='text-lg gap-6'>
                             <Sidebar.Item href="#">
                                 <a  className="flex text-lg items-center text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700" onClick={()=>nav('/listtransactions')}> 
-                                    <span className="ms-3">List Record</span>
+                                    <span className="ms-3">List Incoming Record</span>
+                                </a>
+                            </Sidebar.Item>
+                            
+                            <Sidebar.Item href="#">
+                                <a  className="flex text-lg items-center text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700" onClick={()=>nav('/listoutgoingtransactions')}> 
+                                    <span className="ms-3">List Outgoing Record</span>
                                 </a>
                             </Sidebar.Item>
 

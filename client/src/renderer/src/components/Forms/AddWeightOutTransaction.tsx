@@ -7,35 +7,49 @@ const AddWeightOutTransaction = (props:any) => {
     //state to manage form visibility
     const [goodsTypeDropdownOpen, setGoodsTypeDropdownOpen] = useState<boolean>(false);
     const [goodsTypeDropdownValue, setGoodsTypeDropdownValue] = useState<any>({good_name: "Goods Type", good_code:'0'}); //default value
-    const [emptyContainer, setEmptyContainer] = useState<boolean>(false); //if empty container is checked, filled weight will be 0
     const [reading, setReading] = useState<boolean>(false);
     
-    const {user, comPort, baudRate, goodsType,apiUrl} = useContext(UserContext);
+    const {user, comPort, baudRate, goodsType, apiUrl} = useContext(UserContext);
     
     const [truckNo, setTruckNo] = useState<string>();
-    const [emptyWeight, setemptyWeight] = useState<string>();
-    const [filledWeight, setfilledWeight] = useState<string>();
+    const [truckWeight, setTruckWeight] = useState<string>();
+    const [containerWeight, setContainerWeight] = useState<string>();
+    const [truckContainerWeight, setTruckContainerWeight] = useState<string>(); //truck + container weight
+    const [truckContainerGoodsWeight, setTruckContainerGoodsWeight] = useState<string>(); //truck + container + goods weight
+    // const [emptyWeight, setemptyWeight] = useState<string>();
+    // const [filledWeight, setfilledWeight] = useState<string>();
     const [goodsWeight, setGoodsWeight] = useState<string>();
     const [weightReading, setWeightReading] = useState<string>("0"); //this is a front end thing that will display weight reading on the right side of the form. It will be big and bold. For easier reading for client.
     const [driverName, setDriverName] = useState<string>();
     const [driverContact, setDriverContact] = useState<string>();
+    const [vendorName, setVendorName] = useState<string>();
     //server response will be an object containing message and status
     const [serverResponse, setServerResponse] = useState<{message:string, status:number} | null>(null);
     
     useEffect(()=>
     {
         calculateGoodsWeight();
-    },[emptyWeight, filledWeight])
-
-    // //set filled weight to empty weight if empty container is checked
-    useEffect(()=>
+    },[truckWeight, truckContainerWeight, truckContainerGoodsWeight])
+    
+    const calculateGoodsWeight = () => 
     {
-        if(emptyContainer)
+        // const goodsWeight = parseFloat(filledWeight || '0') - parseFloat(emptyWeight || '0');
+        // setGoodsWeight(goodsWeight.toFixed(2).toString());
+
+        const containerWeight = parseFloat(truckContainerWeight || '0') - parseFloat(truckWeight || '0');
+        setContainerWeight(containerWeight.toFixed(2).toString());
+
+        if(truckContainerGoodsWeight)
         {
-            setfilledWeight(emptyWeight);
+            const goodsWeight = parseFloat(truckContainerGoodsWeight || '0') - parseFloat(truckContainerWeight || '0');
+            setGoodsWeight(goodsWeight.toFixed(2).toString());
         }
-     
-    },[emptyContainer,emptyWeight])
+        else
+        {
+            setGoodsWeight("0");
+        }
+
+    }
 
     useEffect(()=>
     {
@@ -55,16 +69,20 @@ const AddWeightOutTransaction = (props:any) => {
         setTruckNo('');
         setDriverName('');
         setDriverContact('');
-        setemptyWeight('0'); 
-        setfilledWeight('0'); 
+        setVendorName('');
+        setTruckWeight('0');
+        setContainerWeight('0');
+        setTruckContainerWeight('0');
+        setTruckContainerGoodsWeight('0');
+        // setemptyWeight('0'); 
+        // setfilledWeight('0'); 
         setGoodsWeight('0'); 
-        setEmptyContainer(false); 
+        // setEmptyContainer(false); 
         setGoodsTypeDropdownValue('Goods Type')
     };
 
     // const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
     const toggleGoodsTypeDropdown = () => setGoodsTypeDropdownOpen(!goodsTypeDropdownOpen);
-    const isEmptyContainer = () => setEmptyContainer(!emptyContainer);
 
     const handleGoodsTypeDropdownChange = (value:any) =>
     {
@@ -72,19 +90,14 @@ const AddWeightOutTransaction = (props:any) => {
         setGoodsTypeDropdownOpen(false);
     }
 
-    const calculateGoodsWeight = () => 
-    {
-        const goodsWeight = parseFloat(filledWeight || '0') - parseFloat(emptyWeight || '0');
-        setGoodsWeight(goodsWeight.toFixed(2).toString());
-    }
     
     const formSubmit = (e:any) =>
     {
         e.preventDefault();
         console.log("Sending container info to server...")
-        console.log("Data: ", truckNo, "\n", driverName, "\n", driverContact, "\n", goodsTypeDropdownValue.good_code, "\n", emptyWeight, "\n", filledWeight, "\n", goodsWeight, "\n", user?.email)
+        console.log("Data: ", truckNo, "\n", driverName, "\n", driverContact, "\n", vendorName, "\n" , goodsTypeDropdownValue.good_code, "\n", truckWeight, "\n", containerWeight, "\n", truckContainerGoodsWeight, "\n", goodsWeight, "\n", user?.email);
 
-        if(!truckNo || !driverName || !driverContact || goodsTypeDropdownValue.good_name === "Goods Type")
+        if(!truckNo || !driverName || !driverContact || !vendorName || goodsTypeDropdownValue.good_name === "Goods Type")
         {
             console.log("Please fill all fields");
             setServerResponse({message: "Please fill all fields", status: 400});
@@ -99,9 +112,10 @@ const AddWeightOutTransaction = (props:any) => {
                 truck_no: truckNo,
                 driver_name: driverName,
                 driver_contact: driverContact,
+                vendor_name: vendorName,
                 good_code: goodsTypeDropdownValue.good_code,
-                empty_weight: parseFloat(emptyWeight || '0'),
-                filled_weight: parseFloat(filledWeight || '0'),
+                truck_weight: 0,
+                container_weight: parseFloat(containerWeight || '0'),
                 goods_weight: parseFloat(goodsWeight || '0'),
                 employee: user?.email
             })
@@ -137,7 +151,7 @@ const AddWeightOutTransaction = (props:any) => {
 
     }
 
-    const readWeightEmpty = () =>
+    const readWeightEmpty = (param:string) =>
     {
         console.log("Reading weight from serial port...");
         stopReadingEmpty(); 
@@ -151,14 +165,16 @@ const AddWeightOutTransaction = (props:any) => {
         let unsub = window.api.receiveEmpty('weight-data-base', (_event:any, data:any)=>
         {
             console.log("Data received: ", data);
-            setemptyWeight(data);
+            if(param==="truck") setTruckWeight(data);
+            else if(param === "truckContainer") setTruckContainerWeight(data);
+            else if(param === "truckContainerGoods") setTruckContainerGoodsWeight(data);
             setWeightReading(data);
         })
 
         return () => unsub();
     }
 
-    const readWeightFilled = () =>
+    const readWeightFilled = (param:string) =>
     {
         console.log("Reading weight from serial port...");
         stopReadingFilled(); 
@@ -172,7 +188,9 @@ const AddWeightOutTransaction = (props:any) => {
         let unsub = window.api.receiveFilled('weight-data-final', (_event:any, data:any)=>
         {
             // console.log("Data received: ", data);
-            setfilledWeight(data);
+            if(param==="truck") setTruckWeight(data);
+            else if(param === "truckContainer") setTruckContainerWeight(data);
+            else if(param === "truckContainerGoods") setTruckContainerGoodsWeight(data);
             setWeightReading(data);
         })
 
@@ -237,6 +255,10 @@ const AddWeightOutTransaction = (props:any) => {
                         <input type="text" name="truck_no" id="floating_repeat_password" className="block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " value={driverContact} required onChange={(e)=>setDriverContact(e.target.value)} />
                         <label className="peer-focus:font-medium absolute text-lg text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Driver Contact</label>
                     </div>
+                    <div className="relative z-0 w-full mb-5 group">
+                        <input type="text" name="truck_no" id="floating_repeat_password" className="block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " value={vendorName} required onChange={(e)=>setVendorName(e.target.value)} />
+                        <label className="peer-focus:font-medium absolute text-lg text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Vendor Name</label>
+                    </div>
                     <div className="relative z-100 w-full mb-5 group">
                         {/* convert to dropdown */}
                         <button id="dropdownDefaultButton" onClick={toggleGoodsTypeDropdown} data-dropdown-toggle="dropdown" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-base px-5 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">{goodsTypeDropdownValue.good_name}<svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
@@ -262,37 +284,41 @@ const AddWeightOutTransaction = (props:any) => {
                         </div>
                     </div>
 
-                    {/* checkbox here if only empty container needs to be added in this case filled weight is 0 */}
-
-                    <div className="flex items-start mb-5">
-                        <div className="flex items-center h-5">
-                            <input id="terms" type="checkbox" value="" className="w-5 h-5 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-blue-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800" onChange={isEmptyContainer} />
-                        </div>
-                            <label className="ms-2 text-base font-medium text-gray-900 dark:text-gray-300"> Empty Container </label>
-                    </div>
-
                     <div className="grid md:grid-cols-2 md:gap-6">
-                        <div className="relative z-0 w-full mb-5 group flex flex-col"> {/* Change flex direction to column */}
-                            <input type="number" name="empty_weight" id="floating_first_name" className="block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="0" value={emptyWeight} required onChange={(e)=>{setemptyWeight(e.target.value);}} />
-                            <label className="peer-focus:font-medium absolute text-lg text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Empty Weight</label>
-                            {/* button here to read weight */}
-                            { !reading ? <button type="button" className="text-lg text-blue-500 dark:text-blue-400 self-end mt-1" onClick={()=>{readWeightEmpty()}}>Read</button> : <button type="button" className="text-sm text-red-500 dark:text-red-400 self-end mt-1" onClick={()=>{stopReadingEmpty()}}>Stop</button>}
-                        </div>
-                        <div className="relative z-0 w-full mb-5 group flex flex-col"> {/* Change flex direction to column */}
-                            {/* add check here to disable filled weight input if empty container is checked and required only if empty container is not checked */}
-                            <input type="number" name="empty_weight" id="floating_first_name" className={`block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer ${emptyContainer ? 'bg-gray-100 opacity-50 pointer-events-none' : ''}`} placeholder="0" value={filledWeight} required={!emptyContainer} onChange={(e)=>{setfilledWeight(e.target.value);}} />
-                            <label className={`peer-focus:font-medium absolute text-lg text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 ${emptyContainer ? 'opacity-50 pointer-events-none' : ''}`}>Filled Weight</label>
-                            {/* button here to read weight */}
-                            { !reading ? <button type="button" className={`text-lg text-blue-500 dark:text-blue-400 self-end mt-1 ${emptyContainer ? 'opacity-50 pointer-events-none' : ''}`} disabled={emptyContainer} onClick={()=>readWeightFilled()}>Read</button> : <button type="button" className={`text-sm text-red-500 dark:text-red-400 self-end mt-1 ${emptyContainer ? 'opacity-50 pointer-events-none' : ''}`} disabled={emptyContainer} onClick={()=>stopReadingFilled()}>Stop</button>}
-                        </div>
+                            <div className="relative z-0 w-full mb-5 group flex flex-col">
+                                
+                                <input type="number" name="empty_weight" id="floating_first_name" className={`block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer`} placeholder="0" value={truckContainerWeight} required onChange={(e)=>{setTruckContainerWeight(e.target.value);}} />
+                                <label className={`peer-focus:font-medium absolute text-lg text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 `}>Truck + Container Weight</label>
+                                
+                                { !reading ? <button type="button" className={`text-lg text-blue-500 dark:text-blue-400 self-end mt-1`} onClick={()=>readWeightFilled("truckContainer")}>Read</button> : <button type="button" className={`text-sm text-red-500 dark:text-red-400 self-end mt-1`} onClick={()=>stopReadingFilled()}>Stop</button>}
+                            </div>
+                            <div className="relative z-0 w-full mb-5 group flex flex-col">
+                                <input type="number" name="empty_weight" id="floating_first_name" className="block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="0" value={truckWeight} required onChange={(e)=>{setTruckWeight(e.target.value);}} />
+                                <label className="peer-focus:font-medium absolute text-lg text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Truck Weight</label>
+                                
+                                { !reading ? <button type="button" className="text-lg text-blue-500 dark:text-blue-400 self-end mt-1" onClick={()=>{readWeightEmpty("truck")}}>Read</button> : <button type="button" className="text-sm text-red-500 dark:text-red-400 self-end mt-1" onClick={()=>{stopReadingEmpty()}}>Stop</button>}
+                            </div>
                     </div>
-                    {/* <div className="grid md:grid-cols-2 md:gap-6"> */}
+                    
+                    <div className="relative z-0 w-full mb-5 group">
+                        <input type="number" name="goods_weight" value={containerWeight} id="floating_phone" className="block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="0" required readOnly/>
+                        <label className="peer-focus:font-medium absolute text-lg text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Container Weight</label>
+                    </div>
+                    
+                    <div className="relative z-0 w-full mb-5 group flex flex-col">
+                        <input type="number" name="empty_weight" id="floating_first_name" className="block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="0" value={truckContainerGoodsWeight} onChange={(e)=>{setTruckContainerGoodsWeight(e.target.value);}} />
+                        <label className="peer-focus:font-medium absolute text-lg text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Total Weight</label>
+                        
+                        { !reading ? <button type="button" className="text-lg text-blue-500 dark:text-blue-400 self-end mt-1" onClick={()=>{readWeightEmpty("truckContainerGoods")}}>Read</button> : <button type="button" className="text-sm text-red-500 dark:text-red-400 self-end mt-1" onClick={()=>{stopReadingEmpty()}}>Stop</button>}
+                    </div>
+
                     <div className="relative z-0 w-full mb-5 group">
                         <input type="number" name="goods_weight" value={goodsWeight} id="floating_phone" className="block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required readOnly/>
                         <label className="peer-focus:font-medium absolute text-lg text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Goods Weight</label>
                     </div>
-                    {/* </div> */}
-                    {/* submit and cancel button should show side by side */}
+
+                   
+                   
                     <div className="flex justify-end space-x-4">
                         <button type="button" onClick={closeForm} className="text-red-500 bg-gray-200 hover:bg-gray-300 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-lg px-5 py-2.5 text-center dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-800">Cancel</button>
                         <button type="submit" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-lg px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Submit</button>
