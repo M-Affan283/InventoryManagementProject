@@ -29,7 +29,7 @@ interface UserContextType {
 export const UserContext = createContext<UserContextType>({
     user: null,
     isLogged: false,
-    comPort: 'COM5',
+    comPort: 'COM4',
     baudRate: 1200,
     goodsType: [],
     apiUrl: "",

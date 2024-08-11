@@ -1,4 +1,4 @@
-import { addWeighingTransaction, addExternalTransaction, addContractorWork, deleteContractorWork, deleteExternalTransaction, deleteWeighingTransaction, getContractorWork, getExternalTransactions, getWeighingTransactions, getIndividualContractorWork, getIndividualExternalTransaction, getIndividualWeighingTransaction, updateWeighingTransaction, updateContractorWork, updateExternalTransaction, updateGoodsType ,addGoodsType, getGoodsTypes, addWeightAdjustment, updateWeightAdjustment,widgetData } from "../controllers/goods_controller.js";
+import { addWeighingTransaction, addExternalTransaction, addContractorWork, deleteContractorWork, deleteExternalTransaction, deleteWeighingTransaction, getContractorWork, getExternalTransactions, getWeighingTransactions, getIndividualContractorWork, getIndividualExternalTransaction, getIndividualWeighingTransaction, getOutgoingWeighingTransactions, updateWeighingTransaction, updateContractorWork, updateExternalTransaction, updateGoodsType ,addGoodsType, getGoodsTypes, addWeightAdjustment, updateWeightAdjustment,widgetData } from "../controllers/goods_controller.js";
 import express from "express";
 
 const goods_router = express.Router(); 
@@ -12,6 +12,7 @@ goods_router.delete('/deleteWeighingTransaction', deleteWeighingTransaction);
 goods_router.get('/getContractorWork', getContractorWork);
 goods_router.get('/getExternalTransactions', getExternalTransactions);
 goods_router.get('/getWeighingTransactions', getWeighingTransactions);
+goods_router.get('/getOutgoingWeighingTransactions', getOutgoingWeighingTransactions);
 goods_router.get('/getIndividualContractorWork', getIndividualContractorWork);
 goods_router.get('/getIndividualExternalTransaction', getIndividualExternalTransaction);
 goods_router.get('/getIndividualWeighingTransaction', getIndividualWeighingTransaction);

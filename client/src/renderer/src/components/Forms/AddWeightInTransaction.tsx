@@ -19,6 +19,7 @@ const AddWeightInTransaction = (props:any) => {
     const [weightReading, setWeightReading] = useState<string>("0"); //this is a front end thing that will display weight reading on the right side of the form. It will be big and bold. For easier reading for client.
     const [driverName, setDriverName] = useState<string>();
     const [driverContact, setDriverContact] = useState<string>();
+    const [vendorName, setVendorName] = useState<string>();
     //server response will be an object containing message and status
     const [serverResponse, setServerResponse] = useState<{message:string, status:number} | null>(null);
     
@@ -60,6 +61,7 @@ const AddWeightInTransaction = (props:any) => {
         setTruckNo('');
         setDriverName('');
         setDriverContact('');
+        setVendorName('');
         setemptyWeight('0'); 
         setfilledWeight('0'); 
         setGoodsWeight('0'); 
@@ -87,9 +89,9 @@ const AddWeightInTransaction = (props:any) => {
     {
         e.preventDefault();
         console.log("Sending container info to server...")
-        console.log("Data: ", truckNo, "\n", driverName, "\n", driverContact, "\n", goodsTypeDropdownValue.good_code, "\n", emptyWeight, "\n", filledWeight, "\n", goodsWeight, "\n", user?.email)
+        console.log("Data: ", truckNo, "\n", driverName, "\n", driverContact, "\n", vendorName, "\n" , goodsTypeDropdownValue.good_code, "\n", emptyWeight, "\n", filledWeight, "\n", goodsWeight, "\n", user?.email)
 
-        if(!truckNo || !driverName || !driverContact || goodsTypeDropdownValue.good_name === "Goods Type")
+        if(!truckNo || !driverName || !driverContact || !vendorName || goodsTypeDropdownValue.good_name === "Goods Type")
         {
             console.log("Please fill all fields");
             setServerResponse({message: "Please fill all fields", status: 400});
@@ -104,6 +106,7 @@ const AddWeightInTransaction = (props:any) => {
                 truck_no: truckNo,
                 driver_name: driverName,
                 driver_contact: driverContact,
+                vendor_name: vendorName,
                 good_code: goodsTypeDropdownValue.good_code,
                 empty_weight: parseFloat(emptyWeight || '0'),
                 filled_weight: parseFloat(filledWeight || '0'),
@@ -241,6 +244,10 @@ const AddWeightInTransaction = (props:any) => {
                     <div className="relative z-0 w-full mb-5 group">
                         <input type="text" name="truck_no" id="floating_repeat_password" className="block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " value={driverContact} required onChange={(e)=>setDriverContact(e.target.value)} />
                         <label className="peer-focus:font-medium absolute text-lg text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Driver Contact</label>
+                    </div>
+                    <div className="relative z-0 w-full mb-5 group">
+                        <input type="text" name="truck_no" id="floating_repeat_password" className="block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " value={vendorName} required onChange={(e)=>setVendorName(e.target.value)} />
+                        <label className="peer-focus:font-medium absolute text-lg text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Vendor Name</label>
                     </div>
                     <div className="relative z-100 w-full mb-5 group">
                         {/* convert to dropdown */}
