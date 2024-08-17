@@ -12,7 +12,7 @@ const Login = () => {
     const nav = useNavigate();
 
     //set context here
-    const {setUser, setIsLogged, setGoodsType, apiUrl} = useContext(UserContext);
+    const {setUser, setIsLogged, setGoodsType, setVendors, apiUrl} = useContext(UserContext);
 
     const loginSubmit = async (e: any) => 
     {
@@ -34,6 +34,7 @@ const Login = () => {
                     setUser({id: res.data.user._id, firstName: res.data.user.firstName, lastName: res.data.user.lastName, email: res.data.user.email, role: res.data.user.role});
                     setIsLogged(true);
                     setGoodsType(res.data.goods_types);
+                    setVendors(res.data.vendors);
                     // localStorage.setItem('user', JSON.stringify({id: res.data.user.id, firstName: res.data.user.firstName, lastName: res.data.user.lastName, email: res.data.user.email, role: res.data.user.role}));
                     // localStorage.setItem('isLogged', JSON.stringify(true));
 

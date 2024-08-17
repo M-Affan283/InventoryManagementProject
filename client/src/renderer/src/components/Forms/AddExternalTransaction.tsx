@@ -45,6 +45,37 @@ const AddExternalTransaction = (props:any) => {
         e.preventDefault();
         console.log(`Company Name: ${companyName}, Truck No: ${truckNo}, Driver Name: ${driverName}, Driver Contact: ${driverContact}, Vehicle Weight: ${vehicleWeight}, External Rate: ${externalRate}`);
 
+        //regex
+
+        //truck no is alphanumeric
+        if(!/^[a-zA-Z0-9]*$/.test(truckNo))
+        {
+            setServerResponse({message: "Truck No. should be alphanumeric", status: 400});
+            return;
+        }
+
+        //driver contact is numeric
+        if(!/^[0-9]*$/.test(driverContact))
+        {
+            setServerResponse({message: "Driver Contact should be numeric", status: 400});
+            return;
+        }
+
+        //vehicle weight is numeric
+        if(!/^[0-9]*$/.test(vehicleWeight))
+        {
+            setServerResponse({message: "Vehicle Weight should be numeric", status: 400});
+            return;
+        }
+
+        //external rate is numeric
+        if(!/^[0-9]*$/.test(externalRate))
+        {
+            setServerResponse({message: "External Rate should be numeric", status: 400});
+            return;
+        }
+
+
         try
         {
             axios.post(`${apiUrl}/goods/addExternalTransaction`, {company_name: companyName, truck_no: truckNo, driver_name: driverName, driver_contact: driverContact, vehicle_weight: vehicleWeight, external_rate: externalRate, employee: user?.email})

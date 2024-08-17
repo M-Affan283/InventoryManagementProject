@@ -12,7 +12,7 @@ export const addWeighingTransaction = async (req,res) =>
 
     if(type === "incoming")
     {
-        const {truck_no, driver_name, driver_contact, vendor_name, good_code, empty_weight, filled_weight, goods_weight, employee} = req.body;
+        const {truck_no, driver_name, driver_contact, vendor_code, good_code, empty_weight, filled_weight, goods_weight, employee} = req.body;
         console.log("Add incoming weighing transaction request for time: ", Date.now());
         console.log(`details: ${type}, ${truck_no}, ${driver_name}, ${driver_contact}, ${good_code}, ${empty_weight}, ${filled_weight}, ${goods_weight}, ${employee}`)
         try
@@ -29,7 +29,7 @@ export const addWeighingTransaction = async (req,res) =>
                 return res.status(400).json({message: "Goods type not found"});
             }
     
-            const vendor = await Vendor.findOne({vendor_name: vendor_name});
+            const vendor = await Vendor.findOne({vendor_code: vendor_code});
             if(!vendor)
             {
                 return res.status(400).json({message: "Vendor not found"});
@@ -97,9 +97,9 @@ export const addWeighingTransaction = async (req,res) =>
     }
     else if(type === "outgoing")
     {
-        const {truck_no, driver_name, driver_contact, vendor_name, good_code, truck_weight, container_weight, goods_weight, employee} = req.body;
+        const {container_no, driver_name, driver_contact, vendor_code, good_code, truck_weight, container_weight, goods_weight, employee} = req.body;
         console.log("Add outgoing weighing transaction request for time: ", Date.now());
-        console.log(`details: ${type}, ${truck_no}, ${driver_name}, ${driver_contact}, ${good_code}, ${truck_weight}, ${container_weight}, ${goods_weight}, ${employee}`)
+        console.log(`details: ${container_no}, ${driver_name}, ${driver_contact}, ${good_code}, ${truck_weight}, ${container_weight}, ${goods_weight}, ${employee}`)
         try
         {
             const user_present = await User.findOne({email: employee});
@@ -114,7 +114,7 @@ export const addWeighingTransaction = async (req,res) =>
                 return res.status(400).json({message: "Goods type not found"});
             }
     
-            const vendor = await Vendor.findOne({vendor_name: vendor_name});
+            const vendor = await Vendor.findOne({vendor_code: vendor_code});
             if(!vendor)
             {
                 return res.status(400).json({message: "Vendor not found"});
@@ -134,7 +134,7 @@ export const addWeighingTransaction = async (req,res) =>
                 //add filled weight, empty weight, goods weight, weight adjust, date empty weight, employee to the weighing transaction
                 await OutgoingWeighingTransactions.create({
                     type: type,
-                    truck_no: truck_no,
+                    container_no: container_no,
                     driver_name: driver_name,
                     driver_contact: driver_contact,
                     vendor: vendor._id,
@@ -154,7 +154,7 @@ export const addWeighingTransaction = async (req,res) =>
                 //goods weight is 0 which means truck filles weight will be added later
                 await OutgoingWeighingTransactions.create({
                     type: type,
-                    truck_no: truck_no,
+                    container_no: container_no,
                     driver_name: driver_name,
                     driver_contact: driver_contact,
                     vendor: vendor._id,
@@ -196,13 +196,32 @@ export const updateWeighingTransaction = async (req,res) =>
 
         if(transaction.type === "incoming")
         {
-            const {empty_weight, filled_weight, goods_weight} = req.body;
+            const {truck_no, driver_name, driver_contact, good_code, vendor_code, empty_weight, filled_weight, goods_weight} = req.body;
+
+            const goods_type = await GoodsType.findOne({good_code: good_code});
+
+            if(!goods_type)
+            {
+                return res.status(400).json({message: "Goods type not found"});
+            }
+
+            const vendor = await Vendor.findOne({vendor_code: vendor_code});
+
+            if(!vendor)
+            {
+                return res.status(400).json({message: "Vendor not found"});
+            }
 
             const empty_weight_float = parseFloat(empty_weight).toFixed(2);
             const filled_weight_float = parseFloat(filled_weight).toFixed(2);
             const goods_weight_float = parseFloat(goods_weight).toFixed(2);
     
             //update the transaction
+            transaction.truck_no = truck_no;
+            transaction.driver_name = driver_name;
+            transaction.driver_contact = driver_contact;
+            transaction.goods_type_id = goods_type._id;
+            transaction.vendor = vendor._id;
             transaction.empty_weight = empty_weight_float;
             transaction.filled_weight = filled_weight_float;
             transaction.goods_weight = goods_weight_float;
@@ -211,13 +230,32 @@ export const updateWeighingTransaction = async (req,res) =>
         }
         else if(transaction.type === "outgoing")
         {
-            const {truck_weight, container_weight, goods_weight} = req.body;
+            const {truck_no,driver_name,driver_contact, good_code, vendor_code, truck_weight, container_weight, goods_weight} = req.body;
+
+            const goods_type = await GoodsType.findOne({good_code: good_code});
+
+            if(!goods_type)
+            {
+                return res.status(400).json({message: "Goods type not found"});
+            }
+
+            const vendor = await Vendor.findOne({vendor_code: vendor_code});
+
+            if(!vendor)
+            {
+                return res.status(400).json({message: "Vendor not found"});
+            }
 
             const truck_weight_float = parseFloat(truck_weight).toFixed(2);
             const container_weight_float = parseFloat(container_weight).toFixed(2);
             const goods_weight_float = parseFloat(goods_weight).toFixed(2);
 
             //update the transaction
+            transaction.truck_no = truck_no;
+            transaction.driver_name = driver_name;
+            transaction.driver_contact = driver_contact;
+            transaction.goods_type_id = goods_type._id;
+            transaction.vendor = vendor._id;
             transaction.truck_weight = truck_weight_float;
             transaction.container_weight = container_weight_float;
             transaction.goods_weight = goods_weight_float;
@@ -241,8 +279,8 @@ export const updateWeighingTransaction = async (req,res) =>
 
 export const deleteWeighingTransaction = async (req,res) =>
 {
-    const {transaction_id, delete_reason, employee} = req.body;
-    console.log("Delete weighing transaction request for time: ", Date.now());
+    const {transaction_id, delete_reason, employee} = req.query;
+    console.log("Delete weighing transaction request for: ", transaction_id, " ", employee, " ", delete_reason);
 
     try
     {
@@ -267,19 +305,19 @@ export const deleteWeighingTransaction = async (req,res) =>
             return res.status(400).json({message: "Transaction already deleted"});
         }
 
-        //get employee notificaiton
-        // const employee_notifications = await Notifications.findOne({user_id: transaction.employee.email});
-        // const admin = await User.findOne({role: "admin"});
+        // //get employee notificaiton
+        // // const employee_notifications = await Notifications.findOne({user_id: transaction.employee.email});
+        // // const admin = await User.findOne({role: "admin"});
     
-        // const admin_notifications = await Notifications.findOne({user: admin.email});
+        // // const admin_notifications = await Notifications.findOne({user: admin.email});
 
-        // //add notification for the employee that container has been deleted after deletion
-        // let notif_data = {notifType:"transaction_deleted", data: `Truck with transactions id ${transaction_id} has been marked as deleted`, time: new Date()};
-        // // console.log(employee_notifications)
-        // employee_notifications.notifications.push(notif_data);
-        // admin_notifications.notifications.push(notif_data);
+        // // //add notification for the employee that container has been deleted after deletion
+        // // let notif_data = {notifType:"transaction_deleted", data: `Truck with transactions id ${transaction_id} has been marked as deleted`, time: new Date()};
+        // // // console.log(employee_notifications)
+        // // employee_notifications.notifications.push(notif_data);
+        // // admin_notifications.notifications.push(notif_data);
 
-        //update the transaction
+        // //update the transaction
         transaction.is_deleted = true;
         transaction.date_deleted = new Date();
         transaction.delete_by = employee_present._id;
@@ -306,7 +344,7 @@ export const getWeighingTransactions = async (req,res) =>
 
     try
     {
-        console.log("Query: ", req.query);
+        // console.log("Query: ", req.query);
 
         const user = await User.findOne({email: email});
         
@@ -330,8 +368,17 @@ export const getWeighingTransactions = async (req,res) =>
                     ]
                 };
 
+                const goodsSearchFilter = {
+                    $or: [
+                        { good_name: { $regex: searchQuery, $options: 'i' } }
+                    ]
+                }
+
                 const users = await User.find(userSearchFilter);
                 const userIds = users.map(user => user._id);
+
+                const goods = await GoodsType.find(goodsSearchFilter);
+                const goodsIds = goods.map(good => good._id);
 
                 searchFilter = {
                     $or: [
@@ -340,6 +387,7 @@ export const getWeighingTransactions = async (req,res) =>
                         { driver_name: { $regex: searchQuery, $options: 'i' } },
                         { driver_contact: { $regex: searchQuery, $options: 'i' } },
                         { employee: { $in: userIds } },
+                        { goods_type_id: { $in: goodsIds } },
                         ...(isNaN(parseFloat(searchQuery)) ? [] : [
                             { goods_weight: parseFloat(searchQuery) },
                             { weight_adjust: parseFloat(searchQuery) }
@@ -355,6 +403,16 @@ export const getWeighingTransactions = async (req,res) =>
         else
         {
             console.log("Get containers employee request");
+
+            const goodsSearchFilter = {
+                $or: [
+                    { good_name: { $regex: searchQuery, $options: 'i' } }
+                ]
+            }
+
+            const goods = await GoodsType.find(goodsSearchFilter);
+            const goodsIds = goods.map(good => good._id);
+
             //no need for the userid garbage just get only employee transactions
             let searchFilter = searchQuery ? {
                 $or: [
@@ -362,6 +420,7 @@ export const getWeighingTransactions = async (req,res) =>
                     { truck_no: { $regex: searchQuery, $options: 'i' } },
                     { driver_name: { $regex: searchQuery, $options: 'i' } },
                     { driver_contact: { $regex: searchQuery, $options: 'i' } },
+                    { goods_type_id: { $in: goodsIds } },
                     ...(isNaN(parseFloat(searchQuery)) ? [] : [
                         { goods_weight: parseFloat(searchQuery) },
                         { weight_adjust: parseFloat(searchQuery) }
@@ -386,11 +445,11 @@ export const getWeighingTransactions = async (req,res) =>
 export const getOutgoingWeighingTransactions = async (req,res) =>
 {
     const {email, searchQuery="", page=1, limit=10} = req.query;
-    console.log("Get incoming containers request for:" , email);
+    console.log("Get outgoing containers request for:" , email);
 
     try
     {
-        console.log("Query: ", req.query);
+        // console.log("Query: ", req.query);
 
         const user = await User.findOne({email: email});
         
@@ -414,16 +473,27 @@ export const getOutgoingWeighingTransactions = async (req,res) =>
                     ]
                 };
 
+                //search via good name only
+                const goodsSearchFilter = {
+                    $or: [
+                        { good_name: { $regex: searchQuery, $options: 'i' } }
+                    ]
+                }
+
                 const users = await User.find(userSearchFilter);
                 const userIds = users.map(user => user._id);
+
+                const goods = await GoodsType.find(goodsSearchFilter);
+                const goodsIds = goods.map(good => good._id);
 
                 searchFilter = {
                     $or: [
                         { type: { $regex: searchQuery, $options: 'i' } },
-                        { truck_no: { $regex: searchQuery, $options: 'i' } },
+                        { container_no: { $regex: searchQuery, $options: 'i' } },
                         { driver_name: { $regex: searchQuery, $options: 'i' } },
                         { driver_contact: { $regex: searchQuery, $options: 'i' } },
                         { employee: { $in: userIds } },
+                        { goods_type_id: { $in: goodsIds } },
                         ...(isNaN(parseFloat(searchQuery)) ? [] : [
                             { truck_weight: parseFloat(searchQuery) },
                             { container_weight: parseFloat(searchQuery) },
@@ -441,12 +511,24 @@ export const getOutgoingWeighingTransactions = async (req,res) =>
         {
             console.log("Get containers employee request");
             //no need for the userid garbage just get only employee transactions
+
+            //search via good name only
+            const goodsSearchFilter = {
+                $or: [
+                    { good_name: { $regex: searchQuery, $options: 'i' } }
+                ]
+            }
+
+            const goods = await GoodsType.find(goodsSearchFilter);
+            const goodsIds = goods.map(good => good._id);
+
             let searchFilter = searchQuery ? {
                 $or: [
                     { type: { $regex: searchQuery, $options: 'i' } },
                     { truck_no: { $regex: searchQuery, $options: 'i' } },
                     { driver_name: { $regex: searchQuery, $options: 'i' } },
                     { driver_contact: { $regex: searchQuery, $options: 'i' } },
+                    { goods_type_id: { $in: goodsIds } },
                     ...(isNaN(parseFloat(searchQuery)) ? [] : [
                         { truck_weight: parseFloat(searchQuery) },
                         { container_weight: parseFloat(searchQuery) },
@@ -655,7 +737,7 @@ export const updateContractorWork = async (req,res) =>
 
 export const deleteContractorWork = async (req,res) =>
 {
-    const {work_id, delete_reason, employee} = req.body;
+    const {work_id, delete_reason, employee} = req.query;
     console.log("Delete contractor work request");
 
     try
@@ -902,7 +984,7 @@ export const updateExternalTransaction = async (req,res) =>
 
 export const deleteExternalTransaction = async (req,res) =>
 {
-    const {transaction_id, delete_reason, employee} = req.body;
+    const {transaction_id, delete_reason, employee} = req.query;
     console.log("Delete external transaction request");
 
     try

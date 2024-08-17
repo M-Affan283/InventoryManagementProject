@@ -99,6 +99,16 @@ const ListInternalTransactions = () => {
           )
         },
         {
+          Header: "Deleted?",
+          accessor: "is_deleted",
+          Cell: ({row})=>
+          {
+            return(
+              <p>{row.original.is_deleted ? "Yes" : "No"}</p>
+            )
+          }
+        },
+        {
           // Header: "Update",
           accessor: "update",
           Cell: ({row}) => (

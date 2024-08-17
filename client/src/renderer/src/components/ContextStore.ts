@@ -16,6 +16,7 @@ interface UserContextType {
     baudRate: number;
     //array of good types that are added to containers
     goodsType: any[];
+    vendors: any[];
     apiUrl: string;
     //set user as user or null
     setUser: (user: User | null) => void;
@@ -23,6 +24,7 @@ interface UserContextType {
     setComPort: (comPort: string) => void;
     setBaudRate: (baudRate: number) => void;
     setGoodsType: (goodsType: any[]) => void;
+    setVendors: (vendors: any[]) => void;
 }
 
 // Create the context with a default value
@@ -32,10 +34,12 @@ export const UserContext = createContext<UserContextType>({
     comPort: 'COM4',
     baudRate: 1200,
     goodsType: [],
+    vendors: [],
     apiUrl: "",
     setUser: () => {},
     setIsLogged: () => {},
     setComPort: () => {},
     setBaudRate: () => {},
-    setGoodsType: () => {}
+    setGoodsType: () => {},
+    setVendors: () => {}
 });

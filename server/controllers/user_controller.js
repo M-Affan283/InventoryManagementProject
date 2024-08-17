@@ -1,5 +1,5 @@
 //Handle all user related routes e.g. login, signup, etc
-import { User,Notifications, GoodsType, Contractor, ContractorWork, Vendor } from "../models/schema.js";
+import { User, GoodsType, Contractor, ContractorWork, Vendor } from "../models/schema.js";
 import bcrypt from "bcryptjs";
 
 export const login = async (req,res) => 
@@ -43,7 +43,13 @@ export const login = async (req,res) =>
                     return {good_name: type.good_name, good_code: type.good_code, good_rate: type.good_rate};
                 });
 
-                return res.status(200).json({message: "Login successful", user: user_present, goods_types: goods_types});
+                let vendors = await Vendor.find({});
+
+                vendors = vendors.map((vendor) => {
+                    return {vendor_name: vendor.vendor_name, vendor_code: vendor.vendor_code};
+                })
+
+                return res.status(200).json({message: "Login successful", user: user_present, goods_types: goods_types, vendors: vendors});
             }
             else
             {
@@ -108,10 +114,10 @@ export const createUser = async (req,res) =>
             delete_reason: null
         });
 
-        await Notifications.create({
-            user: email,
-            notifications: []
-        });
+        // await Notifications.create({
+        //     user: email,
+        //     notifications: []
+        // });
 
         return res.status(200).json({message: `User ${email} created successfully`});
 
@@ -148,11 +154,11 @@ export const deleteUser = async (req,res) =>
                 return res.status(400).json({message: "User already deleted"});
             }
 
-            const admin_notifications = await Notifications.findOne({user: deletor.email});
+            // const admin_notifications = await Notifications.findOne({user: deletor.email});
 
-            let notif_data = {notifType: "user_delete", data: `User ${email} was deleted by ${deletedBy.email}`, time: new Date()};
+            // let notif_data = {notifType: "user_delete", data: `User ${email} was deleted by ${deletedBy.email}`, time: new Date()};
 
-            admin_notifications.notifications.push(notif_data);
+            // admin_notifications.notifications.push(notif_data);
 
 
 
@@ -161,7 +167,7 @@ export const deleteUser = async (req,res) =>
             user_present.delete_by = deletor._id;
             user_present.delete_reason = "Deleted by admin";
             await user_present.save();
-            await admin_notifications.save();
+            // await admin_notifications.save();
 
 
             return res.status(200).json({message: `User ${email} deleted successfully`});
@@ -210,15 +216,15 @@ export const updatePassword = async (req,res) =>
 
             
             //add notification to employee queue
-            const employee_notifications = await Notifications.findOne({user: user_present.email});
+            // const employee_notifications = await Notifications.findOne({user: user_present.email});
             
-            const admin = await User.findOne({role: "admin"});
+            // const admin = await User.findOne({role: "admin"});
             
-            const admin_notifications = await Notifications.findOne({user: admin.email});
+            // const admin_notifications = await Notifications.findOne({user: admin.email});
             
-            let notif_data = {notifType: "password_change", data: `${email} password was updated to ${newPassword}`, time: new Date()};
-            employee_notifications.notifications.push(notif_data);
-            admin_notifications.notifications.push(notif_data);
+            // let notif_data = {notifType: "password_change", data: `${email} password was updated to ${newPassword}`, time: new Date()};
+            // employee_notifications.notifications.push(notif_data);
+            // admin_notifications.notifications.push(notif_data);
             
             
             user_present.hashedPassword = newPasswordHash;
@@ -226,8 +232,8 @@ export const updatePassword = async (req,res) =>
             user_present.updated_by = admin._id;
             await user_present.save();
 
-            await employee_notifications.save();
-            await admin_notifications.save();
+            // await employee_notifications.save();
+            // await admin_notifications.save();
             
             return res.status(200).json({message: `Password updated successfully for ${email}`});
         }
@@ -267,16 +273,16 @@ export const resetPassword = async (req,res) =>
 
             
             //add notification to employee queue
-            const employee_notifications = await Notifications.findOne({user: user_present.email});
+            // const employee_notifications = await Notifications.findOne({user: user_present.email});
             
-            let notif_data = {notifType: "password_reset", data: `Your password was reset to ${newPassword}`, time: new Date()};
-            employee_notifications.notifications.push(notif_data);
+            // let notif_data = {notifType: "password_reset", data: `Your password was reset to ${newPassword}`, time: new Date()};
+            // employee_notifications.notifications.push(notif_data);
             
             user_present.hashedPassword = newPasswordHash;
             user_present.date_updated = new Date();
             user_present.updated_by = updator._id;
             await user_present.save();
-            await employee_notifications.save();
+            // await employee_notifications.save();
 
             return res.status(200).json({message: `Password reset successfully for ${email}`});
         }
@@ -330,33 +336,33 @@ export const getAllUsers = async (req,res) =>
     }
 }
 
-export const getUserNotifications = async (req,res) =>
-{
-    const {email} = req.query;
+// export const getUserNotifications = async (req,res) =>
+// {
+//     const {email} = req.query;
 
-    console.log("Get notifications request for email: ", email);
+//     console.log("Get notifications request for email: ", email);
 
-    try
-    {
+//     try
+//     {
 
-        const user_present = await User.findOne({email});
+//         const user_present = await User.findOne({email});
 
-        if(user_present)
-        {
-            const notifications = await Notifications.findOne({user: user_present.email});
-            // console.log(notifications)
-            return res.status(200).json({notifications: notifications.notifications});
-        }
+//         if(user_present)
+//         {
+//             const notifications = await Notifications.findOne({user: user_present.email});
+//             // console.log(notifications)
+//             return res.status(200).json({notifications: notifications.notifications});
+//         }
 
-        return res.status(400).json({message: "User does not exist"});
+//         return res.status(400).json({message: "User does not exist"});
 
-    }
-    catch(error)
-    {
-        console.log("Error: ", error);
-        return res.status(500).json({message: "Internal server error"});
-    }
-}
+//     }
+//     catch(error)
+//     {
+//         console.log("Error: ", error);
+//         return res.status(500).json({message: "Internal server error"});
+//     }
+// }
 
 //add labourer
 export const addContractor = async (req,res) =>
@@ -485,7 +491,7 @@ export const getAllContractors = async (req,res) =>
 
 export const addVendor = async (req,res) =>
 {
-    const {vendor_name, vendor_contact, vendor_poc, created_by} = req.body;
+    const {vendor_code, vendor_name, vendor_contact, vendor_poc, created_by} = req.body;
 
     console.log("Add vendor request");
 
@@ -498,7 +504,7 @@ export const addVendor = async (req,res) =>
         }
 
         await Vendor.create({
-            // vendor_code: vendor_code,
+            vendor_code: vendor_code,
             vendor_name: vendor_name,
             vendor_contact: vendor_contact,
             vendor_poc: vendor_poc,

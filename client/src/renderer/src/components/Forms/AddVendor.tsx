@@ -12,6 +12,7 @@ const AddVendor = () => {
 
     const nav = useNavigate();
 
+    const [vendorCode, setVendorCode] = useState<string>("");
     const [vendorPoc, setVedorPoc] = useState<string>("");
     const [vendorName, setVendorName] = useState<string>("");
     const [vendorContact, setVendorContact] = useState<string>("");
@@ -32,7 +33,7 @@ const AddVendor = () => {
         console.log(`Details: ${vendorName}, ${vendorContact}, ${vendorPoc}`)
         try
         {
-            axios.post(`${apiUrl}/user/addVendor`, {vendor_name: vendorName, vendor_contact: vendorContact, vendor_poc: vendorPoc, created_by: user?.email})
+            axios.post(`${apiUrl}/user/addVendor`, {vendor_code: vendorCode,vendor_name: vendorName, vendor_contact: vendorContact, vendor_poc: vendorPoc, created_by: user?.email})
             .then((res)=>
             {
                 if(res.status === 200)
@@ -111,6 +112,10 @@ const AddVendor = () => {
                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Create Vendor</h2>
                         <br/>
 
+                        <div className="relative z-0 w-full mb-5 group">
+                            <input type="text" name="floating_first_name" id="floating_first_name" className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required onChange={(e)=>setVendorCode(e.target.value)} />
+                            <label className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Vendor Code</label>
+                        </div>
                         <div className="relative z-0 w-full mb-5 group">
                             <input type="text" name="floating_first_name" id="floating_first_name" className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " required onChange={(e)=>setVendorName(e.target.value)} />
                             <label className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 rtl:peer-focus:translate-x-1/4 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Vendor Name</label>

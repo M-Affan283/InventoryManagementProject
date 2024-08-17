@@ -39,7 +39,7 @@ const AddForms = (props:any) => {
 
           <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 min-h-screen w-full overflow-y-auto">
             <p className="text-2xl text-gray-400 dark:text-white">
-              Add Weight In Transaction
+              Add Incoming Goods Transaction
             </p>
             <br />
             <br />
@@ -51,7 +51,7 @@ const AddForms = (props:any) => {
           
             <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 min-h-screen w-full overflow-y-auto">
               <p className="text-2xl text-gray-400 dark:text-white">
-                Add Weight Out Transaction
+                Add Outgoing Goods Transaction
               </p>
               <br />
               <br />

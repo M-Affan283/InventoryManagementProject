@@ -110,8 +110,12 @@ const IndividualInternalTransaction = (props:any) => {
             {
                 console.log("Transaction deleted successfully");
                 setServerResponse({message: "Transaction deleted successfully", status: 200});
-                // closeForm();
-                nav("/listintrecords");
+                closeForm();
+                // setDeleteTransaction(false);
+                setTimeout(() => {
+                    nav("/listintrecords"); 
+                }, 2500);
+
             }
             else
             {

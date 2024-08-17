@@ -79,6 +79,10 @@ const AllVendors = () => {
 
     const vendor_columns = [
         {
+          Header: "Vendor Code",
+          accessor: 'vendor_code'
+        },
+        {
             Header: 'Vendor Name',
             accessor: 'vendor_name'
         },

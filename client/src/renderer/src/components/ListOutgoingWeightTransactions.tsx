@@ -80,8 +80,8 @@ const ListOutgoingWeightTransactions = () => {
           accessor: "type"
         },
         {
-          Header: "Truck Number",
-          accessor: "truck_no"
+          Header: "Container Number",
+          accessor: "container_no"
         },
         {
           Header: "Driver Name",
@@ -98,6 +98,16 @@ const ListOutgoingWeightTransactions = () => {
           Cell: ({row}) => (
             <p>{row.original.goods_type_id.good_name}</p>
           )
+        },
+        {
+          Header: "Deleted?",
+          accessor: "is_deleted",
+          Cell: ({row})=>
+          {
+            return(
+              <p>{row.original.is_deleted ? "Yes" : "No"}</p>
+            )
+          }
         },
         {
           // Header: "Update",

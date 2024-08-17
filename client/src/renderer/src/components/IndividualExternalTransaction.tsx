@@ -160,6 +160,42 @@ const IndividualExternalTransaction = (props:any) => {
         e.preventDefault();
         console.log(`Updating transaction ${transaction_id}...`)
 
+        //regex
+        //truck no is alphanumeric
+
+        if(!/^[a-zA-Z0-9]+$/.test(truckNo))
+        {
+            console.log("Truck No. should be alphanumeric");
+            setServerResponse({message: "Truck No. should be alphanumeric", status: 400});
+            return;
+        }
+
+        if(!/^[a-zA-Z ]*$/.test(driverName))
+        {
+            console.log("Invalid driver name");
+            setServerResponse({message: "Invalid driver name", status: 400});
+            // closeForm();
+            return;
+        }
+
+        //driver contact is numeric
+        if(!/^[0-9]*$/.test(driverContact))
+        {
+            console.log("Invalid driver contact");
+            setServerResponse({message: "Invalid driver contact", status: 400});
+            // closeForm();
+            return;
+        }
+
+        //eternal rate is float
+        if(!/^[0-9.]*$/.test(externalRate))
+        {
+            console.log("Invalid external rate");
+            setServerResponse({message: "Invalid external rate", status: 400});
+            // closeForm();
+            return;
+        }
+
         try
         {
             axios.post(`${apiUrl}/goods/updateExternalTransaction`, {transaction_id: transaction_id, company_name: companyName, truck_no: truckNo, driver_name: driverName, driver_contact: driverContact, vehicle_weight: vehicleWeight, external_rate: externalRate, employee: user?.email})

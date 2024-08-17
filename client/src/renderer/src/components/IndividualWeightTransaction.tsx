@@ -9,6 +9,7 @@ import { DocumentScanner } from '@mui/icons-material'
 import TuneIcon from '@mui/icons-material/Tune';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import { Dropdown } from "flowbite-react";
 
 
 const IndividualWeightTransaction = (props:any) => {
@@ -24,7 +25,7 @@ const IndividualWeightTransaction = (props:any) => {
     const [reading, setReading] = useState<boolean>(false);
     const [serverResponse, setServerResponse] = useState<{message:string, status:number} | null>(null);
 
-    const {user, isLogged, comPort, baudRate, apiUrl} = useContext(UserContext);
+    const {user, isLogged, comPort, baudRate, goodsType, vendors, apiUrl} = useContext(UserContext);
     const nav = useNavigate();
 
     const [type, setType] = useState<string>('');
@@ -36,7 +37,8 @@ const IndividualWeightTransaction = (props:any) => {
     const [filledWeight, setfilledWeight] = useState<string>('');
     const [goodsWeight, setGoodsWeight] = useState<string>('');
     const [weightAdjust, setWeightAdjust] = useState<string>('');
-    const [goodsTypeDropdownValue, setGoodsTypeDropdownValue] = useState<string>();
+    const [goodsTypeDropdownValue, setGoodsTypeDropdownValue] = useState<any>({good_name: "Goods Type", good_code:'0'});
+    const [vendorDropDownValue, setVendorDropDownValue] = useState<any>({vendor_name: "Vendor Name", vendor_code: '0'}); //default value
     const [emptyContainer, setEmptyContainer] = useState<boolean>(false);
     const [weightReading, setWeightReading] = useState<string>("0");
     const [deleteReason, setDeleteReason] = useState<string>('');
@@ -45,6 +47,11 @@ const IndividualWeightTransaction = (props:any) => {
     // const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
     // const toggleGoodsTypeDropdown = () => setGoodsTypeDropdownOpen(!goodsTypeDropdownOpen);
     const isEmptyContainer = () => setEmptyContainer(!emptyContainer);
+    const handleGoodsTypeDropdownChange = (value:any) =>
+    {
+        setGoodsTypeDropdownValue(value);
+        // setGoodsTypeDropdownOpen(false);
+    }
 
     useEffect(() => 
     {
@@ -81,7 +88,8 @@ const IndividualWeightTransaction = (props:any) => {
                     setfilledWeight(res.data.transaction.filled_weight.toFixed(2));
                     setGoodsWeight(res.data.transaction.goods_weight.toFixed(2));
                     setWeightAdjust(res.data.transaction.weight_adjust.toFixed(2));
-                    setGoodsTypeDropdownValue(res.data.transaction.goods_type_id.good_name);
+                    setGoodsTypeDropdownValue({good_name: res.data.transaction.goods_type_id.good_name, good_code: res.data.transaction.goods_type_id.good_code});
+                    setVendorDropDownValue({vendor_name: res.data.transaction.vendor.vendor_name, vendor_code: res.data.transaction.vendor.vendor_code});
                 }
                 else
                 {
@@ -185,11 +193,32 @@ const IndividualWeightTransaction = (props:any) => {
     {
         e.preventDefault();
         console.log("Sending container info to server...")
+
+        if(!/^[a-zA-Z ]*$/.test(driverName))
+        {
+            console.log("Invalid driver name");
+            setServerResponse({message: "Invalid driver name", status: 400});
+            // closeForm();
+            return;
+        }
+
+        //driver contact is numeric
+        if(!/^[0-9]*$/.test(driverContact))
+        {
+            console.log("Invalid driver contact");
+            setServerResponse({message: "Invalid driver contact", status: 400});
+            // closeForm();
+            return;
+        }
     
         try
         {
             axios.post('http://localhost:5000/goods/updateWeighingTransaction', {
                 transaction_id: transaction_id,
+                truck_no: truckNo,
+                driver_name: driverName,
+                driver_contact: driverContact,
+                good_code: goodsTypeDropdownValue.good_code,
                 empty_weight: emptyWeight,
                 filled_weight: filledWeight,
                 goods_weight: goodsWeight,
@@ -232,6 +261,15 @@ const IndividualWeightTransaction = (props:any) => {
     {
         e.preventDefault();
         console.log("Sending weight adjust info to server...")
+
+        //regex to check if weight adjust is numeric
+        if(!/^[0-9]*$/.test(weightAdjust))
+        {
+            console.log("Invalid weight adjust");
+            setServerResponse({message: "Invalid weight adjust", status: 400});
+            // closeForm();
+            return;
+        }
 
         try
         {
@@ -278,8 +316,11 @@ const IndividualWeightTransaction = (props:any) => {
                 {
                     console.log("Transaction deleted successfully");
                     setServerResponse({message: "Transaction deleted successfully", status: 200});
-                    // closeForm();
-                    nav("/listtransactions");
+                    closeForm();
+                    // setDeleteTransaction(false);
+                    setTimeout(() => {
+                        nav("/listtransactions");
+                    }, 2500);
                 }
                 else
                 {
@@ -462,11 +503,26 @@ const IndividualWeightTransaction = (props:any) => {
                     </div>
 
                     <div className="relative z-100 w-full mb-5 group">
+                        
+                        <Dropdown label={vendorDropDownValue.vendor_name} style={{backgroundColor: "#2563EB", outline: "none", border: "none", color: "white", borderRadius: "0.5rem", cursor: "pointer"}}>
+                        
+                        {vendors.map((vendor:any, index) => (
+                            <Dropdown.Item key={index} onClick={()=> setVendorDropDownValue(vendor)}>{vendor.vendor_name + " ---- " + vendor.vendor_code}</Dropdown.Item>
+                        ))}
+                    
+                        </Dropdown>
+                    </div>
+                    
+
+                    <div className="relative z-100 w-full mb-5 group">
                             
-                            <button disabled id="dropdownDefaultButton" data-dropdown-toggle="dropdown" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">{goodsTypeDropdownValue}<svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
-                            </svg>
-                            </button>
+                        <Dropdown label={goodsTypeDropdownValue.good_name} style={{backgroundColor: "#2563EB", outline: "none", border: "none", color: "white", borderRadius: "0.5rem", cursor: "pointer"}}>
+                            
+                            {goodsType.map((type:any, index) => (
+                                <Dropdown.Item key={index} onClick={()=> handleGoodsTypeDropdownChange(type)}>{type.good_name + " ---- " + type.good_code}</Dropdown.Item>
+                            ))}
+                        
+                        </Dropdown>
                       </div>
 
                     
@@ -475,12 +531,12 @@ const IndividualWeightTransaction = (props:any) => {
                         <label className="peer-focus:font-medium absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Weight Adjust</label>
                     </div>
 
-                    <div className="flex items-start mb-5">
+                    {/* <div className="flex items-start mb-5">
                         <div className="flex items-center h-5">
                             <input disabled id="terms" type="checkbox" className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-blue-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800" checked={emptyContainer} onChange={isEmptyContainer} />
                         </div>
                             <label className="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300"> Empty Container </label>
-                    </div>
+                    </div> */}
 
                     <div className="grid md:grid-cols-2 md:gap-6">
                         <div className="relative z-0 w-full mb-5 group flex flex-col">

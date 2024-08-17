@@ -60,7 +60,8 @@ const WeighingTransactionsSchema = new mongoose.Schema({
 
 const OutgoingWeighingTransactionsSchema = new mongoose.Schema({
     type: {type: String, required: true}, //outgoing
-    truck_no: {type:String, required: true}, //truck number
+    truck_no: {type:String, required: false}, //truck number
+    container_no: {type:String, required: true}, //container number to be set initially when container arrives
     driver_name: {type:String, required: true}, //name of the driver
     driver_contact: {type:String, required: true}, //contact of the driver
     vendor: {type:mongoose.Schema.Types.ObjectId, ref: "Vendor", required: true}, //vendor code
@@ -79,7 +80,7 @@ const OutgoingWeighingTransactionsSchema = new mongoose.Schema({
 
 //vendor schema for weight transactions
 const VendorSchema = new mongoose.Schema({
-    // vendor_code: {type:String, required: true}, //vendor code
+    vendor_code: {type:String, required: true}, //vendor code
     vendor_name: {type:String, required: true}, //vendor name
     vendor_contact: {type:String, required: true}, //vendor contact
     vendor_poc: {type:String, required: true}, //vendor point of contact
@@ -171,14 +172,14 @@ const ExternalTransactionsSchema = new mongoose.Schema({
 //     delete_reason: {type:String, required: false} //reason for deletion
 // });
 
-const NotificationsSchema = new mongoose.Schema({
-    user: {type:String, required: true}, //each user will have a list of notifications
-    notifications: {type: [{
-        notifType: {type:String, required: true}, //type of notification
-        data: {type:String, required: true},
-        time: {type:Date, required: true}, //time of the notification
-    }]}
-})
+// const NotificationsSchema = new mongoose.Schema({
+//     user: {type:String, required: true}, //each user will have a list of notifications
+//     notifications: {type: [{
+//         notifType: {type:String, required: true}, //type of notification
+//         data: {type:String, required: true},
+//         time: {type:Date, required: true}, //time of the notification
+//     }]}
+// })
 
 
 export const User = mongoose.model("UserInfo", UserInfoSchema);
@@ -190,4 +191,4 @@ export const ContractorWork = mongoose.model("ContractorWork", ContractorWorkSch
 export const GoodsType = mongoose.model("GoodsType", GoodsTypeSchema);
 export const ExternalTransactions = mongoose.model("ExternalTransactions", ExternalTransactionsSchema);
 // export const ExternalRate = mongoose.model("ExternalRate", ExternalRateSchema);
-export const Notifications = mongoose.model("Notifications", NotificationsSchema);
+// export const Notifications = mongoose.model("Notifications", NotificationsSchema);

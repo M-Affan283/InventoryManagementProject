@@ -1,6 +1,7 @@
 import {useEffect, useState, useContext} from 'react'
 import axios from 'axios';
 import { UserContext } from '../ContextStore';
+import { Dropdown } from "flowbite-react";
 
 const AddWeightOutTransaction = (props:any) => {
 
@@ -9,16 +10,19 @@ const AddWeightOutTransaction = (props:any) => {
     const [goodsTypeDropdownValue, setGoodsTypeDropdownValue] = useState<any>({good_name: "Goods Type", good_code:'0'}); //default value
     const [reading, setReading] = useState<boolean>(false);
     
-    const {user, comPort, baudRate, goodsType, apiUrl} = useContext(UserContext);
+    const [vendorDropDownValue, setVendorDropDownValue] = useState<any>({vendor_name: "Vendor Name", vendor_code: '0'}); //default value
     
-    const [truckNo, setTruckNo] = useState<string>();
+    const {user, comPort, baudRate, goodsType, vendors, apiUrl} = useContext(UserContext);
+    
+    // const [truckNo, setTruckNo] = useState<string>();
+    const [containerNo, setContainerNo] = useState<string>();
     const [truckWeight, setTruckWeight] = useState<string>();
-    const [containerWeight, setContainerWeight] = useState<string>();
+    const [containerWeight, setContainerWeight] = useState<string>("");
     const [truckContainerWeight, setTruckContainerWeight] = useState<string>(); //truck + container weight
     const [truckContainerGoodsWeight, setTruckContainerGoodsWeight] = useState<string>(); //truck + container + goods weight
     // const [emptyWeight, setemptyWeight] = useState<string>();
     // const [filledWeight, setfilledWeight] = useState<string>();
-    const [goodsWeight, setGoodsWeight] = useState<string>();
+    const [goodsWeight, setGoodsWeight] = useState<string>("");
     const [weightReading, setWeightReading] = useState<string>("0"); //this is a front end thing that will display weight reading on the right side of the form. It will be big and bold. For easier reading for client.
     const [driverName, setDriverName] = useState<string>();
     const [driverContact, setDriverContact] = useState<string>();
@@ -66,7 +70,7 @@ const AddWeightOutTransaction = (props:any) => {
     const closeForm = () => 
     {
         //clear all fields
-        setTruckNo('');
+        setContainerNo('');
         setDriverName('');
         setDriverContact('');
         setVendorName('');
@@ -82,7 +86,7 @@ const AddWeightOutTransaction = (props:any) => {
     };
 
     // const toggleDropdown = () => setDropdownOpen(!dropdownOpen);
-    const toggleGoodsTypeDropdown = () => setGoodsTypeDropdownOpen(!goodsTypeDropdownOpen);
+    // const toggleGoodsTypeDropdown = () => setGoodsTypeDropdownOpen(!goodsTypeDropdownOpen);
 
     const handleGoodsTypeDropdownChange = (value:any) =>
     {
@@ -95,12 +99,40 @@ const AddWeightOutTransaction = (props:any) => {
     {
         e.preventDefault();
         console.log("Sending container info to server...")
-        console.log("Data: ", truckNo, "\n", driverName, "\n", driverContact, "\n", vendorName, "\n" , goodsTypeDropdownValue.good_code, "\n", truckWeight, "\n", containerWeight, "\n", truckContainerGoodsWeight, "\n", goodsWeight, "\n", user?.email);
+        console.log("Data: ", containerNo, "\n", driverName, "\n", driverContact, "\n", vendorDropDownValue, "\n" , goodsTypeDropdownValue.good_code, "\n", truckWeight, "\n", containerWeight, "\n", truckContainerGoodsWeight, "\n", goodsWeight, "\n", user?.email);
 
-        if(!truckNo || !driverName || !driverContact || !vendorName || goodsTypeDropdownValue.good_name === "Goods Type")
+        if(!containerNo || !driverName || !driverContact || vendorDropDownValue.vendor_name === "Vendor Name" || goodsTypeDropdownValue.good_name === "Goods Type")
         {
             console.log("Please fill all fields");
             setServerResponse({message: "Please fill all fields", status: 400});
+            // closeForm();
+            return;
+        }
+
+        //regex checks
+        //container no is alphanumeric
+        if(!/^[a-zA-Z0-9]*$/.test(containerNo))
+        {
+            console.log("Invalid container number");
+            setServerResponse({message: "Invalid container number", status: 400});
+            // closeForm();
+            return;
+        }
+
+        //driver name is alphabets only
+        if(!/^[a-zA-Z ]*$/.test(driverName))
+        {
+            console.log("Invalid driver name");
+            setServerResponse({message: "Invalid driver name", status: 400});
+            // closeForm();
+            return;
+        }
+
+        //driver contact is numeric
+        if(!/^[0-9]*$/.test(driverContact))
+        {
+            console.log("Invalid driver contact");
+            setServerResponse({message: "Invalid driver contact", status: 400});
             // closeForm();
             return;
         }
@@ -109,10 +141,10 @@ const AddWeightOutTransaction = (props:any) => {
         {
             axios.post(`${apiUrl}/goods/addWeighingTransaction`, {
                 type: "outgoing",
-                truck_no: truckNo,
+                container_no: containerNo,
                 driver_name: driverName,
                 driver_contact: driverContact,
-                vendor_name: vendorName,
+                vendor_code: vendorDropDownValue.vendor_code,
                 good_code: goodsTypeDropdownValue.good_code,
                 truck_weight: 0,
                 container_weight: parseFloat(containerWeight || '0'),
@@ -244,8 +276,8 @@ const AddWeightOutTransaction = (props:any) => {
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white"></h2>
                     <br/>
                     <div className="relative z-0 w-full mb-5 group">
-                        <input type="text" name="truck_no" id="floating_repeat_password" className="block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " value={truckNo} required onChange={(e)=>setTruckNo(e.target.value)} />
-                        <label className="peer-focus:font-medium absolute text-lg text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Truck No.</label>
+                        <input type="text" name="truck_no" id="floating_repeat_password" className="block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " value={containerNo} required onChange={(e)=>setContainerNo(e.target.value)} />
+                        <label className="peer-focus:font-medium absolute text-lg text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Container No.</label>
                     </div>
                     <div className="relative z-0 w-full mb-5 group">
                         <input type="text" name="truck_no" id="floating_repeat_password" className="block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " value={driverName} required onChange={(e)=>setDriverName(e.target.value)} />
@@ -255,33 +287,28 @@ const AddWeightOutTransaction = (props:any) => {
                         <input type="text" name="truck_no" id="floating_repeat_password" className="block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " value={driverContact} required onChange={(e)=>setDriverContact(e.target.value)} />
                         <label className="peer-focus:font-medium absolute text-lg text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Driver Contact</label>
                     </div>
-                    <div className="relative z-0 w-full mb-5 group">
-                        <input type="text" name="truck_no" id="floating_repeat_password" className="block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " value={vendorName} required onChange={(e)=>setVendorName(e.target.value)} />
-                        <label className="peer-focus:font-medium absolute text-lg text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Vendor Name</label>
-                    </div>
-                    <div className="relative z-100 w-full mb-5 group">
-                        {/* convert to dropdown */}
-                        <button id="dropdownDefaultButton" onClick={toggleGoodsTypeDropdown} data-dropdown-toggle="dropdown" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-base px-5 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">{goodsTypeDropdownValue.good_name}<svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
-                        </svg>
-                        </button>
 
-                        {/* <!-- Dropdown menu --> */}
-                        <div id="dropdown" className={`${goodsTypeDropdownOpen ? 'block' : 'hidden'} z-50 bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700 absolute top-full mt-1`}>
-                            <ul className="py-2 text-base text-gray-700 dark:text-gray-200" aria-labelledby="dropdownDefaultButton">
-                                {goodsType.map((type:any, index) => (
-                                    <li key={index}>
-                                        <a 
-                                            href="#" 
-                                            className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white" 
-                                            onClick={() => handleGoodsTypeDropdownChange(type)}
-                                        >
-                                            {type.good_name + " ---- " + type.good_code}
-                                        </a>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
+                    <div className="relative z-100 w-full mb-5 group">
+                        
+                        <Dropdown label={vendorDropDownValue.vendor_name} style={{backgroundColor: "#2563EB", outline: "none", border: "none", color: "white", borderRadius: "0.5rem", cursor: "pointer"}}>
+                        
+                        {vendors.map((vendor:any, index) => (
+                            <Dropdown.Item key={index} onClick={()=> setVendorDropDownValue(vendor)}>{vendor.vendor_name + " ---- " + vendor.vendor_code}</Dropdown.Item>
+                        ))}
+                    
+                        </Dropdown>
+                    </div>
+                    {/* <br/> */}
+                    <div className="relative z-100 w-full mb-5 group">
+                        
+                        {/* //style must be same as above button and li */}
+                        <Dropdown label={goodsTypeDropdownValue.good_name} style={{backgroundColor: "#2563EB", outline: "none", border: "none", color: "white", borderRadius: "0.5rem", cursor: "pointer"}}>
+                        
+                            {goodsType.map((type:any, index) => (
+                                <Dropdown.Item key={index} onClick={()=> handleGoodsTypeDropdownChange(type)}>{type.good_name + " ---- " + type.good_code}</Dropdown.Item>
+                            ))}
+                        
+                        </Dropdown>
                     </div>
 
                     <div className="grid md:grid-cols-2 md:gap-6">
@@ -307,7 +334,7 @@ const AddWeightOutTransaction = (props:any) => {
                     
                     <div className="relative z-0 w-full mb-5 group flex flex-col">
                         <input type="number" name="empty_weight" id="floating_first_name" className="block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder="0" value={truckContainerGoodsWeight} onChange={(e)=>{setTruckContainerGoodsWeight(e.target.value);}} />
-                        <label className="peer-focus:font-medium absolute text-lg text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Total Weight</label>
+                        <label className="peer-focus:font-medium absolute text-lg text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Total Weight (Leave empty if not measured)</label>
                         
                         { !reading ? <button type="button" className="text-lg text-blue-500 dark:text-blue-400 self-end mt-1" onClick={()=>{readWeightEmpty("truckContainerGoods")}}>Read</button> : <button type="button" className="text-sm text-red-500 dark:text-red-400 self-end mt-1" onClick={()=>{stopReadingEmpty()}}>Stop</button>}
                     </div>

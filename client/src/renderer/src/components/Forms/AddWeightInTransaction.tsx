@@ -1,6 +1,7 @@
 import {useEffect, useState, useContext} from 'react'
 import axios from 'axios';
 import { UserContext } from '../ContextStore';
+import { Dropdown } from "flowbite-react";
 
 const AddWeightInTransaction = (props:any) => {
 
@@ -10,7 +11,9 @@ const AddWeightInTransaction = (props:any) => {
     const [emptyContainer, setEmptyContainer] = useState<boolean>(false); //if empty container is checked, filled weight will be 0
     const [reading, setReading] = useState<boolean>(false);
     
-    const {user, comPort, baudRate, goodsType,apiUrl} = useContext(UserContext);
+    const {user, comPort, baudRate, goodsType, vendors,apiUrl} = useContext(UserContext);
+
+    const [vendorDropDownValue, setVendorDropDownValue] = useState<any>({vendor_name: "Vendor Name", vendor_code: '0'}); //default value
     
     const [truckNo, setTruckNo] = useState<string>();
     const [emptyWeight, setemptyWeight] = useState<string>();
@@ -89,12 +92,40 @@ const AddWeightInTransaction = (props:any) => {
     {
         e.preventDefault();
         console.log("Sending container info to server...")
-        console.log("Data: ", truckNo, "\n", driverName, "\n", driverContact, "\n", vendorName, "\n" , goodsTypeDropdownValue.good_code, "\n", emptyWeight, "\n", filledWeight, "\n", goodsWeight, "\n", user?.email)
+        console.log("Data: ", truckNo, "\n", driverName, "\n", driverContact, "\n", vendorDropDownValue, "\n" , goodsTypeDropdownValue.good_code, "\n", emptyWeight, "\n", filledWeight, "\n", goodsWeight, "\n", user?.email)
 
-        if(!truckNo || !driverName || !driverContact || !vendorName || goodsTypeDropdownValue.good_name === "Goods Type")
+        if(!truckNo || !driverName || !driverContact || vendorDropDownValue.vendor_name === "Vendor Name" || goodsTypeDropdownValue.good_name === "Goods Type")
         {
             console.log("Please fill all fields");
             setServerResponse({message: "Please fill all fields", status: 400});
+            // closeForm();
+            return;
+        }
+
+        //regex checks
+        //truck no is alphanumeric
+        if(!/^[a-zA-Z0-9]*$/.test(truckNo))
+        {
+            console.log("Truck No. should be alphanumeric");
+            setServerResponse({message: "Truck No. should be alphanumeric", status: 400});
+            // closeForm();
+            return;
+        }
+
+        //driver name is alphabetic
+        if(!/^[a-zA-Z ]*$/.test(driverName))
+        {
+            console.log("Driver name should be alphabetic");
+            setServerResponse({message: "Driver name should be alphabetic", status: 400});
+            // closeForm();
+            return;
+        }
+
+        //driver contact is numeric only
+        if(!/^[0-9]*$/.test(driverContact))
+        {
+            console.log("Driver contact should be numeric");
+            setServerResponse({message: "Driver contact should be numeric", status: 400});
             // closeForm();
             return;
         }
@@ -106,7 +137,7 @@ const AddWeightInTransaction = (props:any) => {
                 truck_no: truckNo,
                 driver_name: driverName,
                 driver_contact: driverContact,
-                vendor_name: vendorName,
+                vendor_code: vendorDropDownValue.vendor_code,
                 good_code: goodsTypeDropdownValue.good_code,
                 empty_weight: parseFloat(emptyWeight || '0'),
                 filled_weight: parseFloat(filledWeight || '0'),
@@ -245,33 +276,29 @@ const AddWeightInTransaction = (props:any) => {
                         <input type="text" name="truck_no" id="floating_repeat_password" className="block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " value={driverContact} required onChange={(e)=>setDriverContact(e.target.value)} />
                         <label className="peer-focus:font-medium absolute text-lg text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Driver Contact</label>
                     </div>
-                    <div className="relative z-0 w-full mb-5 group">
+                    {/* <div className="relative z-0 w-full mb-5 group">
                         <input type="text" name="truck_no" id="floating_repeat_password" className="block py-2.5 px-0 w-full text-lg text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " value={vendorName} required onChange={(e)=>setVendorName(e.target.value)} />
                         <label className="peer-focus:font-medium absolute text-lg text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:left-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6">Vendor Name</label>
-                    </div>
+                    </div> */}
                     <div className="relative z-100 w-full mb-5 group">
-                        {/* convert to dropdown */}
-                        <button id="dropdownDefaultButton" onClick={toggleGoodsTypeDropdown} data-dropdown-toggle="dropdown" className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-base px-5 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">{goodsTypeDropdownValue.good_name}<svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
-                        </svg>
-                        </button>
-
-                        {/* <!-- Dropdown menu --> */}
-                        <div id="dropdown" className={`${goodsTypeDropdownOpen ? 'block' : 'hidden'} z-50 bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700 absolute top-full mt-1`}>
-                            <ul className="py-2 text-base text-gray-700 dark:text-gray-200" aria-labelledby="dropdownDefaultButton">
-                                {goodsType.map((type:any, index) => (
-                                    <li key={index}>
-                                        <a 
-                                            href="#" 
-                                            className="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white" 
-                                            onClick={() => handleGoodsTypeDropdownChange(type)}
-                                        >
-                                            {type.good_name + " ---- " + type.good_code}
-                                        </a>
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
+                        
+                        <Dropdown label={vendorDropDownValue.vendor_name} style={{backgroundColor: "#2563EB", outline: "none", border: "none", color: "white", borderRadius: "0.5rem", cursor: "pointer"}}>
+                        
+                        {vendors.map((vendor:any, index) => (
+                            <Dropdown.Item key={index} onClick={()=> setVendorDropDownValue(vendor)}>{vendor.vendor_name + " ---- " + vendor.vendor_code}</Dropdown.Item>
+                        ))}
+                    
+                        </Dropdown>
+                    </div>
+                    {/* <br/> */}
+                    <div className="relative z-100 w-full mb-5 group">
+                        <Dropdown label={goodsTypeDropdownValue.good_name} style={{backgroundColor: "#2563EB", outline: "none", border: "none", color: "white", borderRadius: "0.5rem", cursor: "pointer"}}>
+                        
+                        {goodsType.map((type:any, index) => (
+                            <Dropdown.Item key={index} onClick={()=> handleGoodsTypeDropdownChange(type)}>{type.good_name + " ---- " + type.good_code}</Dropdown.Item>
+                        ))}
+                    
+                        </Dropdown>
                     </div>
 
                     {/* checkbox here if only empty container needs to be added in this case filled weight is 0 */}

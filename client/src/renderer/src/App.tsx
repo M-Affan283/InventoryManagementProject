@@ -36,6 +36,7 @@ function App(): JSX.Element {
   const [comPort, setComPort] = useState<string>('COM4');
   const [baudRate, setBaudRate] = useState<number>(1200);
   const [goodsType, setGoodsType] = useState<any[]>([{good_name: "Aluminium", good_code: '1', good_rate: 100}, {good_name: "Steel", good_code: '2', good_rate: 200}]);
+  const [vendors, setVendors] = useState<any[]>([{vendor_name: "Yaseen", vendor_code: '1'}, {vendor_name: "Tariq", vendor_code: '2'}]);
   const apiUrl = "http://localhost:5000";
   //check if user is using desktop app
   useEffect(()=>
@@ -45,26 +46,14 @@ function App(): JSX.Element {
       setDesktopApp(true);
       // console.log("Running in desktop app")
     }
-    else
-    {
-      // console.log("Running in browser")
-    }
 
   },[])
-
-  // useEffect(() => {
-  //   localStorage.setItem('user', JSON.stringify(user));
-  // }, [user]);
-
-  // useEffect(() => {
-  //   localStorage.setItem('isLogged', JSON.stringify(isLogged));
-  // }, [isLogged]);
 
 
   return (
     <BrowserRouter>
     
-      <UserContext.Provider value= {{user, isLogged, comPort, baudRate, goodsType,apiUrl ,setUser, setIsLogged, setComPort, setBaudRate, setGoodsType}}>
+      <UserContext.Provider value= {{user, isLogged, comPort, baudRate, goodsType, vendors,apiUrl ,setUser, setIsLogged, setComPort, setBaudRate, setGoodsType, setVendors}}>
         <Routes>
 
           {/* !!!!!!!!!!!!!!!! ACTUAL PATHS !!!!!!!!!!!!!!!!!!!! */}

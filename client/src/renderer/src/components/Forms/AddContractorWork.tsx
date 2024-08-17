@@ -9,7 +9,7 @@ const AddContractorWork = (props:any) => {
     const [contractorCode, setContractorCode] = useState<string>("");
     // const [emptyWeight, setemptyWeight] = useState<string>();
     // const [filledWeight, setfilledWeight] = useState<string>();
-    const [goodWeight, setGoodWeight] = useState<string>();
+    const [goodWeight, setGoodWeight] = useState<string>("");
     const [garbageWeight, setGarbageWeight] = useState<string>();
     const [weightReading, setWeightReading] = useState<string>("0"); 
     const [workAmountReading, setWorkAmountReading] = useState<string>("0"); //this will be calculated by multiplying weight with rate of goods [good_rate] displayed along with weight reading
@@ -53,6 +53,21 @@ const AddContractorWork = (props:any) => {
     {
         e.preventDefault();
         console.log(`Details: ${contractorCode}, ${goodsTypeDropdownValue}, ${goodWeight}, ${garbageWeight}`)
+
+        //regex for checking if the input is a number
+        let numberRegex = /^[0-9]+$/;
+
+        if(!numberRegex.test(contractorCode))
+        {
+            setServerResponse({message: "Contractor Code should be a number", status: 400});
+            return;
+        }
+
+        if(!numberRegex.test(goodWeight))
+        {
+            setServerResponse({message: "Good Weight should be a number", status: 400});
+            return;
+        }
         
         try
         {
